@@ -66,6 +66,7 @@ void autobaud_begin( void )
 
 int cols = 40;
 int rows = 5;
+long wait = 0;
 
 /////////////////////////////////////////
 // row, col, baud settings
@@ -116,9 +117,22 @@ void newBaud( long b )
   Serial.println( " baud." );
 
   Serial.end();
-  delay( 100 );
+  delay( 10 );
   Serial.begin( baud );
   while( !Serial );   // leonardo fix
+}
+
+void newWait( long w )
+{
+  if( w < 0 ) {
+    Serial.println( F( "Bad number." ));
+    return;
+  }
+
+  wait = w;
+  
+  Serial.print( w, DEC );
+  Serial.println( " ms wait." );
 }
 
 
@@ -136,8 +150,11 @@ void setup()
   Serial.println( "Ready." );
   Serial.println( "" );
 
-  newCols( 80 );
   clearLine();
+
+  newRows( 10 );
+  newWait( 0 );
+  newCols( 80 );
 }
 
 /////////////////////////////////////////
@@ -203,6 +220,7 @@ const char * const lipsum[] = {
 
 void printText( )
 { 
+  const char * cp;
   int idx = 0;
   int ncols = 0;
   int nrows = 0;
@@ -226,7 +244,17 @@ void printText( )
         Serial.print( " " );
         ncols++;
       }
-      Serial.print( lipsum[idx] );
+
+      if( wait > 0 ) {
+        cp = lipsum[idx];
+        while( *cp != '\0' ) {
+          Serial.write( *cp );
+          cp++;
+          delay( wait );
+        }
+      } else {
+        Serial.print( lipsum[idx] );
+      }
       ncols += w;
     }
 
@@ -284,14 +312,15 @@ void loop()
     Serial.println( F("       t - text") );
     Serial.println( F("       ? - settings") );
     Serial.println( F("  c<n> - cols") );
-    Serial.println( F("  b<n> - baud") );
     Serial.println( F("  r<n> - rows") );
+    Serial.println( F("  b<n> - baud") );
+    Serial.println( F("  w<n> - wait in ms") );
   }
 
   else if( !strcmp( line, "?" )) {
-    newCols( cols );
     newRows( rows );
     newBaud( baud );
+    newCols( cols );
   }
 
   else if( line[0] == 'b' ) {
@@ -300,6 +329,8 @@ void loop()
     newCols( atol( &line[1] ));
   } else if( line[0] == 'r' ) {
     newRows( atol( &line[1] ));
+  } else if( line[0] == 'w' ) {
+    newWait( atol( &line[1] ));
   }
   
   
