@@ -5,7 +5,10 @@
  *  for various amounts of lorem ipsum to be generated.
  *  Originally made as a testing device for LlamaTerm.
  *  
- *  v1.0 2016-02-24  yorgle@gmail.com
+ *  yorgle@gmail.com
+ *  
+ *  v1.1 2016-02-29  Echo added
+ *  v1.0 2016-02-24  Initial version
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,6 +20,7 @@ long bauds[] = { /*115200,*/ 9600, 19200, 4800, 57600, // common
 // well, it detects 115200, but it doesn't work
 
 long baud = 0;
+int echo = 0;
 
 void serial_connected( void )
 {
@@ -48,6 +52,7 @@ void autobaud_begin( void )
     }
     
     int ch = Serial.read();
+    if( echo ) Serial.write( ch );
     if( ch == 0x0d || ch == 0x0a) {
       baud = bauds[baud];
       serial_connected( );
@@ -69,7 +74,14 @@ int rows = 5;
 long wait = 0;
 
 /////////////////////////////////////////
-// row, col, baud settings
+// serial, row, col, baud settings
+
+void echoSet( int e )
+{
+  echo = e;
+  if( echo == 0 ) Serial.println( F( "Echo off." ));
+  if( echo == 1 ) Serial.println( F( "Echo on." ));
+}
 
 void newCols( int w )
 {
@@ -152,6 +164,7 @@ void setup()
 
   clearLine();
 
+  echoSet( false );
   newRows( 10 );
   newWait( 0 );
   newCols( 80 );
@@ -283,9 +296,10 @@ void readLine()
   int lp = 0;
 
   /* read until newline or filled string */
-  while( ch != '\n' && lp < (80-1) ) {
+  while( (ch != 10 ) && (ch != 13) && (lp < (80-1)) ) {
     while( !Serial.available() ) delay( 5 );
     ch = Serial.read();
+    if( echo ) Serial.write( ch );
     line[lp] = ch;
     lp++;
   }
@@ -315,9 +329,11 @@ void loop()
     Serial.println( F("  r<n> - rows") );
     Serial.println( F("  b<n> - baud") );
     Serial.println( F("  w<n> - wait in ms") );
+    Serial.println( F("  e    - toggle echo") );
   }
 
   else if( !strcmp( line, "?" )) {
+    echoSet( echo );
     newRows( rows );
     newBaud( baud );
     newCols( cols );
@@ -331,6 +347,9 @@ void loop()
     newRows( atol( &line[1] ));
   } else if( line[0] == 'w' ) {
     newWait( atol( &line[1] ));
+  } else if( line[0] == 'e' ) {
+    if( echo == 0 ) echoSet( 1 );
+    else echoSet( 0 );
   }
   
   
