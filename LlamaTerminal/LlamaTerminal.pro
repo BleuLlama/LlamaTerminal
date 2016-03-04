@@ -13,8 +13,16 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    palettedframebuffer.cpp \
+    serialinterface.cpp \
+    textbuffer.cpp \
+    font.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    palettedframebuffer.h \
+    serialinterface.h \
+    textbuffer.h \
+    font.h
 
 FORMS    += mainwindow.ui
