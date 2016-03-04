@@ -7,8 +7,13 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , pfb( NULL )
     , tb( NULL )
+    , si( NULL )
     , runMode( kRunMode_Serial )
     , delayRender( false )
+    , localEcho( false )
+    , hidePrompt( false )
+    , timerTickCount( 0 )
+
 {
     ui->setupUi(this);
 
@@ -24,34 +29,26 @@ MainWindow::MainWindow(QWidget *parent)
     this->tb = new TextBuffer( );
     this->connect( this->tb, SIGNAL(TextHasChanged()), this, SLOT( TextBufferHasChanged() ) );
 
-    ////////////////////////////////////////
-    for( int m=0 ; m < 3 ; m++ ) {
-        for( int k=0 ; k<=0x0f ; k++ ) {
-            tb->SetPen( 1, k );
-            char buf[5];
-            snprintf( buf, 5, " %x", k );
-            tb->AddText( buf );
-        }
-        tb->AddCharacter( '\n' );
-    }
-    tb->AddCharacter( '\n' );
+    this->si = new SerialInterface();
 
-    tb->SetPen( 0x09, 0x09 ); tb->AddCharacters( ' ', 40 );
-    tb->SetPen( 0x01, 0x00 ); tb->AddText( "\n             LlamaTerm v0.01\n" );
-    tb->SetPen( 0x09, 0x09 ); tb->AddCharacters( ' ', 40 );
+    this->ShowDebug( kDebugItem_Colors );
+    this->ShowReady();
 
-    tb->SetPen( 0x0e, 0x00 ); tb->AddText( "\n\nPress [alt] for menu.\n" );
-
-    tb->SetPen( 0x05, 0x00 ); tb->AddText( "\nReady.\n\n" );
-
-    tb->SetPen( 0x0d, 0x00 );
+    this->connect( &this->timer,
+                   SIGNAL(timeout()),
+                          this,
+                          SLOT( timerTick() )
+                   );
+            this->timer.start( 30 );
 }
+
 
 /* when we shut down, this gets called */
 MainWindow::~MainWindow()
 {
     //delete this->pfb;
     //delete this->tb;
+    //delete this->si;
     delete ui;
 }
 
@@ -77,13 +74,64 @@ void MainWindow::TextBufferHasChanged( )
     if( this->delayRender ) return;
 
     /* the text buffer has changed, we'll just refresh the graphicstext render */
-    this->pfb->RenderTextColorBuffer( this->tb->GetColor(), this->tb->GetText(), this->tb->GetCursorX() );
+    this->pfb->RenderTextColorBuffer( this->tb->GetColor(),
+                                      this->tb->GetText(),
+                                      this->hidePrompt? -10 : this->tb->GetCursorX() );
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::ShowReady( void )
+{
+    this->delayRender = true;
+
+    // bars with version text
+    tb->SetPen( 0x09, 0x09 ); tb->AddCharacters( ' ', 40 );
+    tb->SetPen( 0x01, 0x00 ); tb->AddText( "\n             LlamaTerm v0.01\n" );
+    tb->SetPen( 0x09, 0x09 ); tb->AddCharacters( ' ', 40 );
+
+    // helpful
+    tb->SetPen( 0x0e, 0x00 ); tb->AddText( "\n\nPress [alt] for menu.\n" );
+
+    // ready!
+    tb->SetPen( 0x05, 0x00 ); tb->AddText( "\nReady!\n\n" );
+
+    tb->SetPen( 0x0d, 0x00 );
+
+    this->delayRender = false;
+    this->TextBufferHasChanged();
+}
+
+
+void MainWindow::ShowDebug( int items )
+{
+    this->delayRender = true;
+
+    tb->AddText( "\n\n" );
+
+    if( items & kDebugItem_Colors )
+    {
+        for( int m=0 ; m < 1 ; m++ ) {
+            for( int k=0 ; k<=0x0f ; k++ ) {
+                tb->SetPen( 1, k );
+                char buf[5];
+                snprintf( buf, 5, " %x", k );
+                tb->AddText( buf );
+            }
+            tb->AddCharacter( '\n' );
+        }
+        tb->AddCharacter( '\n' );
+    }
+
+    this->delayRender = false;
+    this->TextBufferHasChanged();
 }
 
 
 #define kMenu_Main   (0)
 #define kMenu_Serial (1)
 #define kMenu_Video  (2)
+#define kMenu_Quit   (3)
 
 void MainWindow::DisplayMenu( void )
 {
@@ -96,25 +144,35 @@ void MainWindow::DisplayMenu( void )
         this->tb->AddText( "Main Menu:\n");
         this->tb->SetPen( 0x01, 0x00 );
 
+        this->tb->AddText( "  d: debug\n");
         this->tb->AddText( "  s: serial\n");
         this->tb->AddText( "  v: video settings\n");
         this->tb->AddText( "  x: exit menu (or alt)\n");
         this->tb->AddText( "  q: quit LlamaTerminal\n");
         break;
 
+    case( kMenu_Quit ):
+        this->tb->SetPen( 0x02, 0x00 );
+        this->tb->AddText( "\nReally quit?\n");
+        this->tb->SetPen( 0x07, 0x00 );
+        this->tb->AddText( "  y: yes, quit\n");
+        this->tb->AddText( "  n: no, return\n");
+        break;
+
     case( kMenu_Serial ):
         this->tb->AddText( "Serial Menu:\n");
         this->tb->SetPen( 0x01, 0x00 );
 
-        this->tb->AddText( "  c: Not connected\n");
-        this->tb->AddText( "  d: <device>\n");
+        this->tb->AddText( "  d: " + this->si->GetDeviceString() + "\n");
+        this->tb->AddText( "  c: ");
+            this->tb->AddText( this->si->GetConnected()? "Connected\n" : "Not connected\n" );
 
         this->tb->AddText( "  e: ");
             this->tb->AddText( this->localEcho? "Local echo\n" : "No echo\n" );
-        this->tb->AddText( "  r: 9600\n");
-        this->tb->AddText( "  b: 8\n");
-        this->tb->AddText( "  p: n\n");
-        this->tb->AddText( "  s: 1\n");
+        this->tb->AddText( "  r: " + QString::number( si->GetBaud() ) + " baud\n");
+        this->tb->AddText( "  b: " + QString::number( si->GetBits() ) + " bits\n");
+        this->tb->AddText( "  p: " + si->GetParityString() + " parity\n");
+        this->tb->AddText( "  s: " + si->GetStopString() + " stop\n");
 
         this->tb->AddText( "  x: exit menu\n");
         break;
@@ -131,6 +189,7 @@ void MainWindow::DisplayMenu( void )
             this->tb->AddText( this->pfb->GetDoubleVert() ? "Vert Double\n" : "Vert Single\n" );
         this->tb->AddText( "  s: ");
             this->tb->AddText( this->pfb->GetScanLines() ? "Scanlines\n" : "No Scanlines\n" );
+        this->tb->AddText( "  p: " + this->pfb->GetPaletteString() + "\n" );
         this->tb->AddText( "  x: exit menu\n");
         break;
     }
@@ -152,6 +211,9 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
         } else {
             this->runMode = kRunMode_Menu;
             this->menuID = kMenu_Main;
+
+            this->DisplayMenu();
+            return;
         }
     }
 
@@ -163,11 +225,16 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
     if( this->runMode == kRunMode_Menu ) {
         int ch = e->text().toUtf8()[0];
 
+        this->tb->SetPen( 0x0A, 0x00 );
+        this->tb->AddText( "<" + e->text() + ">\n");
+
         switch( this->menuID ) {
-        case( kMenu_Main ):
+        case( kMenu_Main ): /* ******** Main Menu ******** */
             switch( ch ) {
+            case( 'd' ): this->ShowDebug( kDebugItem_EVERYTHING ); break;
             case( 's' ): this->menuID = kMenu_Serial; break;
             case( 'v' ): this->menuID = kMenu_Video; break;
+            case( 'q' ): this->menuID = kMenu_Quit; break;
 
             case( 'x' ):
                 this->runMode = kRunMode_Serial;
@@ -175,22 +242,30 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
                 this->tb->AddText( "Text mode.\n");
                 break;
 
-            case( 'q' ): exit( 0 );
-
             default:
                 this->tb->AddText( "?\n" );
                 break;
             }
             break;
 
-        case( kMenu_Serial ):
+        case( kMenu_Quit ):
             switch( ch ) {
-            case( 'c' ): break; /* connect/disconnect */
-            case( 'd' ): break; /* select next device */
-            case( 'r' ): break; /* baud rate */
-            case( 'b' ): break; /* data bits */
-            case( 'p' ): break; /* parity */
-            case( 's' ): break; /* stop bits */
+            case( 'y' ): exit( 0 );
+            default:
+                break;
+            }
+            this->menuID = kMenu_Main;
+
+            break;
+
+        case( kMenu_Serial ): /* ******** Serial Menu ******** */
+            switch( ch ) {
+            case( 'c' ): this->si->ToggleConnect(); break; /* connect/disconnect */
+            case( 'd' ): this->si->ToggleDevice(); break;  /* select next device */
+            case( 'r' ): this->si->ToggleBaud(); break;    /* baud rate */
+            case( 'b' ): this->si->ToggleBits(); break;    /* data bits */
+            case( 'p' ): this->si->ToggleParity(); break;  /* parity */
+            case( 's' ): this->si->ToggleStop(); break;    /* stop bits */
 
             case( 'e' ): this->localEcho = (this->localEcho)?0:1; break;
 
@@ -201,13 +276,17 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
             }
             break;
 
-        case( kMenu_Video ):
+        case( kMenu_Video ): /* ******** Video Menu ******** */
             switch( ch ) {
             case( 'f' ): break; /* font */
             case( 'c' ): this->tb->Clear(); break;
-            case( 'h' ): this->pfb->ToggleDoubleHoriz(); break;
-            case( 'v' ): this->pfb->ToggleDoubleVert(); break;
-            case( 's' ): this->pfb->ToggleScanLines(); break;
+            case( 'h' ): this->pfb->ToggleDoubleHoriz(); break; /* double horizontal pixels */
+            case( 'v' ): this->pfb->ToggleDoubleVert(); break;  /* double vertical pixels */
+            case( 's' ): this->pfb->ToggleScanLines(); break;   /* show scanlines */
+            case( 'p' ):     /* change palette */
+                this->pfb->TogglePalette();
+                this->ShowDebug( kDebugItem_Colors );
+                break;
 
             case( 'x' ): this->menuID = kMenu_Main; break;
             default:
@@ -234,4 +313,17 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
         }
         //serial->write( e->text().toUtf8() );
     }
+}
+
+
+void MainWindow::timerTick( void )
+{
+    this->timerTickCount++;
+
+    if( this->timerTickCount & 0x08 ) {
+        this->hidePrompt = true;
+    } else {
+        this->hidePrompt = false;
+    }
+    this->TextBufferHasChanged();
 }

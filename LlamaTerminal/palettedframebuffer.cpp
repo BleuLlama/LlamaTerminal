@@ -6,13 +6,14 @@
 
 ////////////////////////////////////////////////////////////
 
+// ref: https://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_palettes
 
 const PALENT colorPalette [] =
 {
     // C=64 Palette
     {   0,   0,   0 },  // 0x00: black
     { 255, 255, 255 },  // 0x01: white
-    { 255,   0,   0 },  // 0x02: red /* was 136 */
+    { 136,   0,   0 },  // 0x02: red
     { 170, 255, 238 },  // 0x03: cyan
     { 204,  68, 204 },  // 0x04: violet
     {   0, 204,  85 },  // 0x05: green
@@ -44,8 +45,58 @@ const PALENT colorPalette [] =
     {  87, 202, 205 },  // 0x1C: cyan
     {   0,  67, 236 },  // 0x1D: blue
     { 174,  80, 222 },  // 0x1E: violet
-    { 183,  62, 130 }   // 0x1F: red violet
+    { 183,  62, 130 },   // 0x1F: red violet
+
+    // VGA (ANSI layout)
+    {   0,   0,   0 }, // 0: black
+    { 170,   0,   0 }, // 1: red
+    {   0, 170,   0 }, // 2: green
+    { 170,  85,   0 }, // 3: brown
+    {   0,   0, 170 }, // 4: blue
+    { 170,   0, 170 }, // 5: magenta
+    {   0, 170, 170 }, // 6: cyan
+    { 170, 170, 170 }, // 7: gray
+    {  85,  85,  85 }, // 8: light black
+    { 255,  85,  85 }, // 9: light red
+    {  85, 255,  85 }, // a: light green
+    { 255, 255,  85 }, // b: light yellow
+    {  85,  85, 255 }, // c: light blue
+    { 255,  85, 255 }, // d: light magenta
+    {  85, 255, 255 }, // e: light cyan
+    { 255, 255, 255 }, // f: white
+
+    // xterm (ANSI layout)
+    {   0,   0,   0 }, // 0: black
+    { 205,   0,   0 }, // 1: red
+    {   0, 205,   0 }, // 2: green
+    { 205, 205,   0 }, // 3: brown
+    {   0,   0, 238 }, // 4: blue
+    { 205,   0, 205 }, // 5: magenta
+    {   0, 205, 205 }, // 6: cyan
+    { 229, 229, 229 }, // 7: gray
+    { 127, 127, 127 }, // 8: light black
+    { 255,   0,   0 }, // 9: light red
+    {   0, 255,   0 }, // a: light green
+    { 255, 255,   0 }, // b: light yellow
+    {  92,  92, 255 }, // c: light blue
+    { 255,   0, 255 }, // d: light magenta
+    {   0, 255, 255 }, // e: light cyan
+    { 255, 255, 255 }, // f: white
 };
+
+typedef struct PALETTE {
+    const char * name;
+    const PALENT * colors;
+} PALETTE;
+
+PALETTE pals[] = {
+    { "Commodore 64", &colorPalette[0] },
+    { "Deluxe Paint", &colorPalette[16] },
+    { "PC-DOS VGA",   &colorPalette[32] },
+    { "xterm",        &colorPalette[48] },
+    { NULL, NULL }
+};
+
 
 ////////////////////////////////////////////////////////////
 
@@ -56,6 +107,7 @@ PalettedFrameBuffer::PalettedFrameBuffer( QObject *parent )
     , indexedBuffer( NULL )
     , rgbBuffer( NULL )
     , imageGfx( NULL )
+    , palId( 0 )
     , hSpacing( 0 )
     , vSpacing( 1 )
     , doublevert( 1 )
@@ -111,26 +163,54 @@ void PalettedFrameBuffer::UpSet( void )
 
 void PalettedFrameBuffer::RenderScreen( void )
 {
-    int poffs = 0;
-    if( this->palId == kPaletteAmiga )  poffs = 16;
+    const PALENT * colors = pals[ this->palId ].colors;
 
     if( !this->rgbBuffer ) return;
 
     // 1. convert the indexed buffer to the RGB buffer
     for( int i=0 ; i < (this->width * this->height) ; i++ )
     {
-        int paletteIndex = (this->indexedBuffer[i] & 0x0F) + poffs;
-        this->rgbBuffer[ (i*3)+0 ] = colorPalette[ paletteIndex ].r; // r
-        this->rgbBuffer[ (i*3)+1 ] = colorPalette[ paletteIndex ].g; // g
-        this->rgbBuffer[ (i*3)+2 ] = colorPalette[ paletteIndex ].b; // b
+        int paletteIndex = (this->indexedBuffer[i] & 0x0F);
+        this->rgbBuffer[ (i*3)+0 ] = colors[ paletteIndex ].r; // r
+        this->rgbBuffer[ (i*3)+1 ] = colors[ paletteIndex ].g; // g
+        this->rgbBuffer[ (i*3)+2 ] = colors[ paletteIndex ].b; // b
     }
 
     emit this->ScreenIsRendered();
+}
 
-#ifdef NEVER
-    // 3. Blit the QImage into the label
+////////////////////////////////////////////////////////////
+/*
+ * typedef struct PALETTE {
+    const char * name;
+    const PALENT * colors;
+} PALETTE;
 
-#endif
+PALETTE pals[] = {
+    { "Commodore 64", &colorPalette[0] },
+    { "Deluxe Paint", &colorPalette[16] },
+    { "PC-DOS VGA",   &colorPalette[32] },
+    { "xterm",        &colorPalette[48] },
+    { NULL, NULL }
+};
+*/
+
+void PalettedFrameBuffer::TogglePalette( void )
+{
+    if( this->palId < 0 ) {
+        this->palId = 0; // just in case
+        return;
+    }
+
+    this->palId++;
+    if( pals[ this->palId ].name == NULL ) {
+        this->palId = 0;
+    }
+}
+
+QString PalettedFrameBuffer::GetPaletteString()
+{
+    return pals[ this->palId ].name;
 }
 
 ////////////////////////////////////////////////////////////
@@ -301,8 +381,12 @@ void PalettedFrameBuffer::RenderTextColorBuffer( const unsigned char * color,
 
     /* draw the cursor */
     if( cursorX >= 0 ) {
-        unsigned char cx[] = { 0x0F };
-        this->DrawText(  hPad + (cursorX * 16), height - this->VSpacePerCharacter(), cx, "#" );
+        /* block cursor:     color 0xFF, character '_'
+         * underline cursor: color 0x0F, character '_'
+         */
+
+        unsigned char cx[] = { 0xFF };
+        this->DrawText(  hPad + (cursorX * 16), height - this->VSpacePerCharacter(), cx, "_" );
     }
 
     /* and flush it to the screen */

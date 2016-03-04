@@ -43,8 +43,8 @@ public:
     /* palette selection */
 public:
     void SelectPalette( int p ) { this->palId = p; }
-#define kPaletteC64   (0)
-#define kPaletteAmiga (1)
+    void TogglePalette( void );
+    QString GetPaletteString();
 
     /* pixels */
 public:
@@ -94,7 +94,6 @@ public:
     void SetScanLines(   bool z ) { if( z ) this->scanlines= 1; else this->scanlines = 0; }
     bool GetScanLines(   void   ) { return (this->scanlines == 0) ? false : true; }
     bool ToggleScanLines( void ) { this->scanlines = this->scanlines ? 0:1; return this->GetScanLines(); }
-
 
 public:
     int DrawText( int x, int y, const unsigned char * pens, const unsigned char * txt );
