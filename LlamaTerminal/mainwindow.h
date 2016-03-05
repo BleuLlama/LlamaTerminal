@@ -57,6 +57,10 @@ public slots:
     void TextBufferHasChanged();    
     void timerTick();
 
+    void SerialPortHasConnected();
+    void SerialPortHasDisconnected();
+    void SerialDidReceiveData();
+
 private:
     QTimer timer;
     long timerTickCount;

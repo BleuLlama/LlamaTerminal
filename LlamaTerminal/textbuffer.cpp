@@ -98,13 +98,14 @@ void TextBuffer::ScrollOneRow( bool suppressSignal )
 
 void TextBuffer::AddCharacter( char ch )
 {
-    if( ch == 0x0d ) {
+    if( ch == 0x0d ) { /* CR */
+        //this->ScrollOneRow( true /* we'll emit the signal here */ );
+        this->textX = 0;
+
+    } else if( ch == 0x0a ) { /* LF */
         this->ScrollOneRow( true /* we'll emit the signal here */ );
         this->textX = 0;
 
-    } else if( ch == 0x0a ) {
-        this->ScrollOneRow( true /* we'll emit the signal here */ );
-        this->textX = 0;
     } else {
         this->text[ this->textX  ] = ch;
         this->color[ this->textX ] = this->pen;

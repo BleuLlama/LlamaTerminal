@@ -385,8 +385,13 @@ void PalettedFrameBuffer::RenderTextColorBuffer( const unsigned char * color,
          * underline cursor: color 0x0F, character '_'
          */
 
+        if( this->doublehoriz )
+            cursorX *= 16;
+        else
+            cursorX *= 8;
+
         unsigned char cx[] = { 0xFF };
-        this->DrawText(  hPad + (cursorX * 16), height - this->VSpacePerCharacter(), cx, "_" );
+        this->DrawText(  hPad + cursorX, height - this->VSpacePerCharacter(), cx, "_" );
     }
 
     /* and flush it to the screen */

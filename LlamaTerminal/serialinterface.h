@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QtSerialPort/QSerialPortInfo>
-//#include <QSerialPort.h>
+#include <QSerialPort.h>
 
 class SerialInterface : public QObject
 {
@@ -13,13 +13,18 @@ public:
     ~SerialInterface( void );
 
 private:
-    QString deviceString;
+    QString deviceName;
+    QString deviceLocation;
+    QString deviceDescription;
+    bool deviceInUse;
+
+private:
     bool isConnected;
     unsigned long baud; /* 110..57600 */
     int bits;  /* 5,6,7,8 */
     char parity; /* N O E M S */
+    int flowcontrol;
     int stop;   /* 1 1.5 2 */
-
 
 public:
     unsigned long GetBaud()   { return this->baud; }
@@ -28,34 +33,45 @@ public:
     int GetStop()    { return this->stop; }
     QString GetParityString();
     QString GetStopString();
+    QString GetFlowControlString();
     bool GetConnected() { return this->isConnected; }
-    QString GetDeviceString() { return this->deviceString; }
+    QString GetDeviceNameString() { return this->deviceName; }
+    QString GetDeviceLocationString() { return this->deviceLocation; }
+    QString GetDeviceDescriptionString() { return this->deviceDescription; }
+    bool GetDeviceInUse() { return this->deviceInUse; }
+
+private:
+    QSerialPort * serial;
+public:
+    QSerialPort * GetSerialPort() { return this->serial; }
 
 public:
     void ToggleBaud();
     void ToggleBits();
     void ToggleParity();
+    void ToggleFlowControl();
     void ToggleStop();
     void ToggleConnect();
     void ToggleDevice();
 
-public: /* devices */
-    int ScanForDevices();
-    QString DeviceAt( int dno );
-    bool DeviceAvailable( int dno );
-
-    int Open( void );
-    void Close( void );
-    bool IsOpen( void );
+private: /* devices */
+    int GetNumPortsAvailable();
+    QString NameForPortAt( int which );
+    QString DescriptionForPortAt( int which );
+    QString LocationForPortAt( int which );
+    int IndexOfLocation( QString loc );
+    bool InUseForPortAt( int which );
 
 public: /* xmit */
-    void Send( char ch );
-    void Send( char * str );
-    void Send( QString str );
+    void Send( QByteArray qba );
 
 signals:
+    void SerialPortConnected();
+    void SerialPortDisconnected();
+    void SerialReceivedData();
 
 public slots:
+    void readData();
 };
 
 #endif // SERIALINTERFACE_H

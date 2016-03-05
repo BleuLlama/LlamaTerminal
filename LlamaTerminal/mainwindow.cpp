@@ -30,6 +30,9 @@ MainWindow::MainWindow(QWidget *parent)
     this->connect( this->tb, SIGNAL(TextHasChanged()), this, SLOT( TextBufferHasChanged() ) );
 
     this->si = new SerialInterface();
+    this->connect( this->si, SIGNAL( SerialPortConnected() ), this, SLOT( SerialPortHasConnected() ) );
+    this->connect( this->si, SIGNAL( SerialPortDisconnected() ), this, SLOT( SerialPortHasDisconnected() ) );
+    this->connect( this->si, SIGNAL( SerialReceivedData() ), this, SLOT( SerialDidReceiveData() ) );
 
     this->ShowDebug( kDebugItem_Colors );
     this->ShowReady();
@@ -50,6 +53,29 @@ MainWindow::~MainWindow()
     //delete this->tb;
     //delete this->si;
     delete ui;
+}
+
+
+void MainWindow::SerialPortHasConnected()
+{
+}
+
+void MainWindow::SerialPortHasDisconnected()
+{
+}
+
+void MainWindow::SerialDidReceiveData()
+{
+    this->delayRender = true;
+
+    QByteArray data = this->si->GetSerialPort()->readAll();
+
+    for( int j=0 ; j<data.length() ; j++ )
+    {
+        this->tb->AddCharacter( data.at( j ));
+    }
+    this->delayRender = false;
+    this->TextBufferHasChanged();
 }
 
 /* this gets called when the framebuffer is ready to be redrawn to the screen */
@@ -87,7 +113,7 @@ void MainWindow::ShowReady( void )
 
     // bars with version text
     tb->SetPen( 0x09, 0x09 ); tb->AddCharacters( ' ', 40 );
-    tb->SetPen( 0x01, 0x00 ); tb->AddText( "\n             LlamaTerm v0.01\n" );
+    tb->SetPen( 0x01, 0x00 ); tb->AddText( "\n             LlamaTerm v0.02\n" );
     tb->SetPen( 0x09, 0x09 ); tb->AddCharacters( ' ', 40 );
 
     // helpful
@@ -163,16 +189,24 @@ void MainWindow::DisplayMenu( void )
         this->tb->AddText( "Serial Menu:\n");
         this->tb->SetPen( 0x01, 0x00 );
 
-        this->tb->AddText( "  d: " + this->si->GetDeviceString() + "\n");
-        this->tb->AddText( "  c: ");
-            this->tb->AddText( this->si->GetConnected()? "Connected\n" : "Not connected\n" );
+        this->tb->AddText( "  d: " + this->si->GetDeviceNameString() + "\n");
+        if( this->si->GetDeviceInUse() == true ) {
+            this->tb->AddText( "     (unavailable)\n");
+        } else {
+            //this->tb->AddText( "     " + this->si->GetDeviceDescriptionString() + "\n");
+            this->tb->AddText( "  c: ");
+                this->tb->AddText( this->si->GetConnected()? "Connected\n" : "Not connected\n" );
 
-        this->tb->AddText( "  e: ");
-            this->tb->AddText( this->localEcho? "Local echo\n" : "No echo\n" );
-        this->tb->AddText( "  r: " + QString::number( si->GetBaud() ) + " baud\n");
-        this->tb->AddText( "  b: " + QString::number( si->GetBits() ) + " bits\n");
-        this->tb->AddText( "  p: " + si->GetParityString() + " parity\n");
-        this->tb->AddText( "  s: " + si->GetStopString() + " stop\n");
+            this->tb->AddText( "  e: ");
+                this->tb->AddText( this->localEcho? "Local echo\n" : "No echo\n" );
+            if( !this->si->GetConnected() ) {
+                this->tb->AddText( "  r: " + QString::number( si->GetBaud() ) + " baud\n");
+                this->tb->AddText( "  b: " + QString::number( si->GetBits() ) + " bits\n");
+                this->tb->AddText( "  p: " + si->GetParityString() + " parity\n");
+                this->tb->AddText( "  s: " + si->GetStopString() + " stop\n");
+                this->tb->AddText( "  f: " + si->GetFlowControlString() + " flow ctrl\n");
+            }
+        }
 
         this->tb->AddText( "  x: exit menu\n");
         break;
@@ -259,13 +293,34 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
             break;
 
         case( kMenu_Serial ): /* ******** Serial Menu ******** */
+
+            if( this->si->GetDeviceInUse() == true ) {
+                /* if the device is in use, we can only go to the next one */
+                if( ch == 'd' ) this->si->ToggleDevice();
+
+            } else
+            if( this->si->GetConnected() == true ) {
+                /* if the device is connected, we can only disconnect */
+                if( ch == 'c' ) this->si->ToggleConnect();
+
+            } else {
+                /* otherwise we can change settings */
+                switch( ch ) {
+                case( 'c' ): this->si->ToggleConnect(); break;      /* connect/disconnect */
+                case( 'd' ): this->si->ToggleDevice(); break;       /* select next device */
+                case( 'r' ): this->si->ToggleBaud(); break;         /* baud rate */
+                case( 'b' ): this->si->ToggleBits(); break;         /* data bits */
+                case( 'p' ): this->si->ToggleParity(); break;       /* parity */
+                case( 's' ): this->si->ToggleStop(); break;         /* stop bits */
+                case( 'f' ): this->si->ToggleFlowControl(); break;  /* flow control */
+                default: break;
+                }
+            }
+
             switch( ch ) {
-            case( 'c' ): this->si->ToggleConnect(); break; /* connect/disconnect */
-            case( 'd' ): this->si->ToggleDevice(); break;  /* select next device */
-            case( 'r' ): this->si->ToggleBaud(); break;    /* baud rate */
-            case( 'b' ): this->si->ToggleBits(); break;    /* data bits */
-            case( 'p' ): this->si->ToggleParity(); break;  /* parity */
-            case( 's' ): this->si->ToggleStop(); break;    /* stop bits */
+            case( 'c' ): case( 'd' ): case( 'r' ): case( 'b' ): case( 'p' ): case( 's' ):
+                // ignore, and no error printed
+                break;
 
             case( 'e' ): this->localEcho = (this->localEcho)?0:1; break;
 
@@ -311,7 +366,7 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
                 tb->AddCharacter( e->text().toUtf8().at( j ) );
             }
         }
-        //serial->write( e->text().toUtf8() );
+        this->si->Send( e->text().toUtf8() );
     }
 }
 
