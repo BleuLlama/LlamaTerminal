@@ -82,19 +82,61 @@ const PALENT colorPalette [] =
     { 255,   0, 255 }, // d: light magenta
     {   0, 255, 255 }, // e: light cyan
     { 255, 255, 255 }, // f: white
+
+    // Amiga 1.x
+    {  14,  65, 140 }, // 0: blue
+    { 236, 236, 236 }, // 1: white
+    {   0,   0,   0 }, // 2: black
+    { 220, 115,  35 }, // 3: orange
+    {  80,  80,  80 }, // 4: gray 80  // from here down are ideas
+    { 197, 197, 197 }, // 5: gray 197
+    {  10,  20,  55 }, // 6: dk blue
+    { 150, 150, 150 }, // 7: gray 150
+    { 161,  44,  28 }, // 8: tomato red
+    { 255, 255, 255 }, // 9: pure white
+    {  71,  16,  38 }, // a: deep burgundy
+    { 235, 161,  78 }, // b: light orange/creamsicle
+    {  50,  95,  36 }, // c: green
+    { 103, 164,  50 }, // d: light green
+    {  24,  45, 125 }, // e: blue (**)
+    {  76, 117, 215 }, // f: light blue
+
+    // Amiga 2.x
+    { 154, 154, 154 }, // 0: gray
+    {   0,   0,   0 }, // 1: black
+    { 255, 255, 255 }, // 2: white
+    {  84, 115, 173 }, // 3: lt blue
+    {  25,  42, 250 }, // 4: bright blue
+    { 225,  64, 254 }, // 5: bright pink
+    {  95, 248, 251 }, // 6: cyan
+    { 255, 255, 255 }, // 7: white (*)
+    {  95, 248, 251 }, // 8: cyan (*)
+    {  83,  83,  83 }, // 9; Gray-83
+    { 135, 135, 135 }, // A: Gray-135
+    { 154, 154, 154 }, // B: Gray (*)
+    { 230,  47,  53 }, // C: Red
+    {  93, 219,  69 }, // D: green
+    {   2,  40, 212 }, // E: Blue
+    { 231, 135,  37 }, // F: Orange
+
 };
 
 typedef struct PALETTE {
     const char * name;
     const PALENT * colors;
+    unsigned char defaultFG;
+    unsigned char defaultBG;
+    unsigned char promptColor;
 } PALETTE;
 
 PALETTE pals[] = {
-    { "Commodore 64", &colorPalette[0] },
-    { "Deluxe Paint", &colorPalette[16] },
-    { "PC-DOS VGA",   &colorPalette[32] },
-    { "xterm",        &colorPalette[48] },
-    { NULL, NULL }
+    { "Commodore 64", &colorPalette[16 * 0], 0x03, 0x06, 0x0e },
+    { "Deluxe Paint", &colorPalette[16 * 1], 0x03, 0x00, 0x08 },
+    { "PC-DOS VGA",   &colorPalette[16 * 2], 0x0f, 0x00, 0x0f },
+    { "xterm",        &colorPalette[16 * 3], 0x07, 0x00, 0x02 },
+    { "Amiga 1.x",    &colorPalette[16 * 4], 0x01, 0x00, 0x03 },
+    { "Amiga 2.x",    &colorPalette[16 * 5], 0x01, 0x00, 0x03 },
+    { NULL, NULL, 0, 0, 0 }
 };
 
 
@@ -109,6 +151,10 @@ PalettedFrameBuffer::PalettedFrameBuffer( QObject *parent )
     , imageGfx( NULL )
     , palId( 0 )
     , fnt( NULL )
+    , defaultFGColor( 1 )
+    , defaultBGColor( 0 )
+    , defaultPromptColor( 2 )
+    , promptType( kPrompt_Block )
     , hSpacing( 0 )
     , vSpacing( 1 )
     , doublevert( 1 )
@@ -207,6 +253,10 @@ void PalettedFrameBuffer::TogglePalette( void )
     if( pals[ this->palId ].name == NULL ) {
         this->palId = 0;
     }
+
+    this->defaultBGColor = pals[ this->palId ].defaultBG;
+    this->defaultFGColor = pals[ this->palId ].defaultFG;
+    this->defaultPromptColor = pals[ this->palId ].promptColor;
 }
 
 QString PalettedFrameBuffer::GetPaletteString()
@@ -380,18 +430,30 @@ void PalettedFrameBuffer::RenderTextColorBuffer( const unsigned char * color,
     }
 
     /* draw the cursor */
-    if( cursorX >= 0 ) {
+    if( cursorX >= 0 && (this->promptType != kPrompt_None) )  {
         /* block cursor:     color 0xFF, character '_'
          * underline cursor: color 0x0F, character '_'
          */
+        unsigned char cx = this->defaultPromptColor;
+
+        switch( this->promptType ) {
+        case( kPrompt_Underscore ):
+            cx = this->defaultPromptColor | ( this->defaultBGColor << 4 );
+            break;
+
+        case( kPrompt_Block ):
+            cx = this->defaultPromptColor | (this->defaultPromptColor << 4 );
+            break;
+        }
+
+
 
         if( this->doublehoriz )
-            cursorX *= 16;
+            cursorX *= (16 + this->hSpacing);
         else
-            cursorX *= 8;
+            cursorX *= (8 + this->hSpacing);
 
-        unsigned char cx[] = { 0xFF };
-        this->DrawText(  hPad + cursorX, height - this->VSpacePerCharacter(), cx, "_" );
+        this->DrawText(  hPad + cursorX, height - this->VSpacePerCharacter(), &cx, "_" );
     }
 
     /* and flush it to the screen */

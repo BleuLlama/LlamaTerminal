@@ -72,6 +72,29 @@ public:
 #define kDisplayPatternStripes   (3)
 #define kDisplayPatternRandom    (4)
 
+private:
+    unsigned char defaultFGColor;
+    unsigned char defaultBGColor;
+    unsigned char defaultPromptColor;
+public:
+    unsigned char GetDefaultFGColor() { return this->defaultFGColor; }
+    void SetDefaultFGColor( unsigned char x ) { this->defaultFGColor = x; }
+    unsigned char GetDefaultBGColor() { return this->defaultBGColor; }
+    void SetDefaultBGColor( unsigned char x ) { this->defaultBGColor = x; }
+    unsigned char GetDefaultPromptColor() { return this->defaultPromptColor; }
+    void SetDefaultPromptColor( unsigned char x ) { this->defaultPromptColor = x; }
+
+private:
+    int promptType;
+#define kPrompt_None       (0)
+#define kPrompt_Underscore (1)
+#define kPrompt_Block      (2)
+public:
+    void SetPromptType( int p ) { this->promptType = p; }
+    int GetPromptType() { return this->promptType; }
+    void TogglePromptType() { this->promptType++; if (this->promptType > 2) this->promptType = 1; }
+    QString GetPromptString() { if( this->promptType == 1 ) return "Line"; return "Block"; }
+
     /* FONT rendering stuff */
 private:
     int hSpacing; /* space between characters */
@@ -84,9 +107,11 @@ private:
 public:
     void SetHSpacing(    int z  ) { this->hSpacing = z; }
     int  GetHSpacing(    void   ) { return this->hSpacing; }
+    void ToggleHSpacing( void   ) { this->hSpacing++; if( this->hSpacing > 5 ) this->hSpacing = 0; }
 
     void SetVSpacing(    int z  ) { this->vSpacing = z; }
     int  GetVSpacing(    void   ) { return this->vSpacing; }
+    void ToggleVSpacing( void   ) { this->vSpacing++; if( this->vSpacing > 5 ) this->vSpacing = 0; }
 
     void SetDoubleVert(  bool z ) { if( z ) this->doublevert = 1; else this->doublevert = 0; }
     bool GetDoubleVert(  void   ) { return (this->doublevert == 0) ? false : true; }

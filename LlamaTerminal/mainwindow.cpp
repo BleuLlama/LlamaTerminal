@@ -170,8 +170,9 @@ void MainWindow::ShowDebug( int items )
 
 #define kMenu_Main   (0)
 #define kMenu_Serial (1)
-#define kMenu_Video  (2)
-#define kMenu_Quit   (3)
+#define kMenu_Font   (2)
+#define kMenu_Video (3)
+#define kMenu_Quit   (4)
 
 void MainWindow::DisplayMenu( void )
 {
@@ -186,7 +187,8 @@ void MainWindow::DisplayMenu( void )
 
         this->tb->AddText( "  d: debug\n");
         this->tb->AddText( "  s: serial\n");
-        this->tb->AddText( "  v: video settings\n");
+        this->tb->AddText( "  f: font\n");
+        this->tb->AddText( "  v: video\n");
         this->tb->AddText( "  x: exit menu (or alt)\n");
         this->tb->AddText( "  q: quit LlamaTerminal\n");
         break;
@@ -225,20 +227,33 @@ void MainWindow::DisplayMenu( void )
         this->tb->AddText( "  x: exit menu\n");
         break;
 
-    case( kMenu_Video ):
-        this->tb->AddText( "Video Menu:\n");
+    case( kMenu_Font ):
+        this->tb->AddText( "Font Menu:\n");
         this->tb->SetPen( 0x01, 0x00 );
 
         this->tb->AddText( "  f: " + this->fnt->GetFontName() + "\n" );
-        this->tb->AddText( "  c: clear\n" );
         this->tb->AddText( "  h: " );
             this->tb->AddText( this->pfb->GetDoubleHoriz() ? "Horiz Double\n" : "Horiz Single\n" );
         this->tb->AddText( "  v: ");
             this->tb->AddText( this->pfb->GetDoubleVert() ? "Vert Double\n" : "Vert Single\n" );
         this->tb->AddText( "  s: ");
             this->tb->AddText( this->pfb->GetScanLines() ? "Scanlines\n" : "No Scanlines\n" );
+        this->tb->AddText( "  1: " + QString::number( this->pfb->GetHSpacing() ) + " px H Space\n" );
+        this->tb->AddText( "  2: " + QString::number( this->pfb->GetVSpacing() ) + " px V Space\n" );
+        this->tb->AddText( "  x: exit menu\n");
+        break;
+
+    case( kMenu_Video ):
+        this->tb->AddText( "Video Menu:\n");
+        this->tb->SetPen( 0x01, 0x00 );
+
+        this->tb->AddText( "  k: clear\n" );
+        this->tb->AddText( "  c: " + this->pfb->GetPromptString() + " cursor\n" );
         this->tb->AddText( "  p: " + this->pfb->GetPaletteString() + "\n" );
         this->tb->AddText( "  x: exit menu\n");
+        break;
+
+    default:
         break;
     }
     this->delayRender = false;
@@ -282,6 +297,7 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
             case( 'd' ): this->ShowDebug( kDebugItem_EVERYTHING ); break;
             case( 's' ): this->menuID = kMenu_Serial; break;
             case( 'v' ): this->menuID = kMenu_Video; break;
+            case( 'f' ): this->menuID = kMenu_Font; break;
             case( 'q' ): this->menuID = kMenu_Quit; break;
 
             case( 'x' ):
@@ -347,16 +363,28 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
 
         case( kMenu_Video ): /* ******** Video Menu ******** */
             switch( ch ) {
-            case( 'f' ): this->fnt->ToggleFont(); break; /* font */
-            case( 'c' ): this->tb->Clear(); break;
-            case( 'h' ): this->pfb->ToggleDoubleHoriz(); break; /* double horizontal pixels */
-            case( 'v' ): this->pfb->ToggleDoubleVert(); break;  /* double vertical pixels */
-            case( 's' ): this->pfb->ToggleScanLines(); break;   /* show scanlines */
+            case( 'k' ): this->tb->Clear(); break;
+            case( 'c' ): this->pfb->TogglePromptType(); break;
             case( 'p' ):     /* change palette */
                 this->pfb->TogglePalette();
                 this->ShowDebug( kDebugItem_Colors );
                 break;
 
+            case( 'x' ): this->menuID = kMenu_Main; break;
+            default:
+                this->tb->AddText( "?\n" );
+                break;
+            }
+            break;
+
+        case( kMenu_Font ): /* ******** Font Menu ******** */
+            switch( ch ) {
+            case( 'f' ): this->fnt->ToggleFont(); break; /* font */
+            case( 'h' ): this->pfb->ToggleDoubleHoriz(); break; /* double horizontal pixels */
+            case( 'v' ): this->pfb->ToggleDoubleVert(); break;  /* double vertical pixels */
+            case( 's' ): this->pfb->ToggleScanLines(); break;   /* show scanlines */
+            case( '1' ): this->pfb->ToggleHSpacing(); break;
+            case( '2' ): this->pfb->ToggleVSpacing(); break;
             case( 'x' ): this->menuID = kMenu_Main; break;
             default:
                 this->tb->AddText( "?\n" );
