@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QImage>
 #include <QLabel>
+#include "font.h"
 
 #define kDefaultWidth (640)
 #define kDefaultHeight (480)
@@ -29,6 +30,7 @@ private:
     unsigned char * rgbBuffer;
     QImage * imageGfx;
     int palId;
+    LFONT * fnt;
 
 public:
     void Setup( int w, int h );
@@ -39,6 +41,9 @@ public:
     unsigned char * GetBuffer() { return this->indexedBuffer; }
     unsigned char * GetRGBBuffer() { return this->rgbBuffer; }
     QImage * getQImage() { return this->imageGfx; }
+
+public:
+    void SetFont( LFONT * fnt ) { this->fnt = fnt; }
 
     /* palette selection */
 public:

@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
     , pfb( NULL )
     , tb( NULL )
     , si( NULL )
+    , fnt( NULL )
     , runMode( kRunMode_Serial )
     , delayRender( false )
     , localEcho( false )
@@ -20,12 +21,6 @@ MainWindow::MainWindow(QWidget *parent)
     this->pfb = new PalettedFrameBuffer( this );
     this->connect( this->pfb, SIGNAL(ScreenIsRendered()), this, SLOT( ScreenHasBeenUpdated() ) );
 
-    this->pfb->FillWithPattern( kDisplayPatternDiagonals );
-
-    unsigned char pens[] = { 0x10, 0x01, 0x23, 0x34, 0x45, 0x46, 0x99 };
-    this->pfb->DrawText( 30, 30, pens, "Hello!" );
-    this->pfb->RenderScreen();
-
     this->tb = new TextBuffer( );
     this->connect( this->tb, SIGNAL(TextHasChanged()), this, SLOT( TextBufferHasChanged() ) );
 
@@ -33,6 +28,18 @@ MainWindow::MainWindow(QWidget *parent)
     this->connect( this->si, SIGNAL( SerialPortConnected() ), this, SLOT( SerialPortHasConnected() ) );
     this->connect( this->si, SIGNAL( SerialPortDisconnected() ), this, SLOT( SerialPortHasDisconnected() ) );
     this->connect( this->si, SIGNAL( SerialReceivedData() ), this, SLOT( SerialDidReceiveData() ) );
+
+    this->fnt = new Font();
+    this->connect( this->fnt, SIGNAL( NewFontLoaded() ), this, SLOT( FontHasLoaded() ));
+    this->fnt->Setup();
+    this->pfb->SetFont( this->fnt->GetLFont() );
+
+    this->pfb->FillWithPattern( kDisplayPatternDiagonals );
+
+    unsigned char pens[] = { 0x10, 0x01, 0x23, 0x34, 0x45, 0x46, 0x99 };
+    this->pfb->DrawText( 30, 30, pens, "Hello!" );
+    this->pfb->RenderScreen();
+
 
     this->ShowDebug( kDebugItem_Colors );
     this->ShowReady();
@@ -103,6 +110,13 @@ void MainWindow::TextBufferHasChanged( )
     this->pfb->RenderTextColorBuffer( this->tb->GetColor(),
                                       this->tb->GetText(),
                                       this->hidePrompt? -10 : this->tb->GetCursorX() );
+}
+
+/* this is called when a new font is loaded */
+void MainWindow::FontHasLoaded( )
+{
+    this->pfb->SetFont( this->fnt->GetLFont() );
+    this->TextBufferHasChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,7 +229,7 @@ void MainWindow::DisplayMenu( void )
         this->tb->AddText( "Video Menu:\n");
         this->tb->SetPen( 0x01, 0x00 );
 
-        this->tb->AddText( "  f: font: internal\n");
+        this->tb->AddText( "  f: " + this->fnt->GetFontName() + "\n" );
         this->tb->AddText( "  c: clear\n" );
         this->tb->AddText( "  h: " );
             this->tb->AddText( this->pfb->GetDoubleHoriz() ? "Horiz Double\n" : "Horiz Single\n" );
@@ -333,7 +347,7 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
 
         case( kMenu_Video ): /* ******** Video Menu ******** */
             switch( ch ) {
-            case( 'f' ): break; /* font */
+            case( 'f' ): this->fnt->ToggleFont(); break; /* font */
             case( 'c' ): this->tb->Clear(); break;
             case( 'h' ): this->pfb->ToggleDoubleHoriz(); break; /* double horizontal pixels */
             case( 'v' ): this->pfb->ToggleDoubleVert(); break;  /* double vertical pixels */

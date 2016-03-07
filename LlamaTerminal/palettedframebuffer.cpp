@@ -108,6 +108,7 @@ PalettedFrameBuffer::PalettedFrameBuffer( QObject *parent )
     , rgbBuffer( NULL )
     , imageGfx( NULL )
     , palId( 0 )
+    , fnt( NULL )
     , hSpacing( 0 )
     , vSpacing( 1 )
     , doublevert( 1 )
@@ -296,7 +297,6 @@ void PalettedFrameBuffer::FillWithPattern( int patno )
 
 int PalettedFrameBuffer::DrawText( int x, int y, const unsigned char * pens, const unsigned char * txt )
 {
-    LFONT * fnt = &internalFont; /* for now, hardcoded */
     int c = 0;
     int yp;
     int mask = 0x80;

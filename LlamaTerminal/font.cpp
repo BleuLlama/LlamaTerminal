@@ -1,3 +1,8 @@
+
+#include <QDir>
+#include <QDebug>
+#include <QImage>
+
 #include "font.h"
 
 /*
@@ -240,18 +245,174 @@ unsigned char __font_data[224][8] =
     { 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
 
-extern unsigned char __font_data[224][8];
-
-
 LFONT internalFont = {
     ' ', ' '+224,
     8, 8,
     (unsigned char *)__font_data
 };
 
+#define kInternalFontPath "@@internal@@"
 
-Font::Font(QObject *parent) : QObject(parent)
+Font::Font(QObject *parent)
+    : QObject(parent)
+    , fontDirectory( "/Users/slawrence/proj/LlamaTerminal/Fonts" )
+    , currentFontPath( kInternalFontPath )
+    , currentFontName( "" )
+{
+    /* start out by allocing the buffer */
+    this->theFont.data = new unsigned char[ 8 * 256 ];
+
+    /* and for now, we have a fixed width/heighth font 8x8px */
+    this->theFont.w = 8;
+    this->theFont.h = 8;
+
+}
+
+Font::~Font()
+{
+    delete this->theFont.data;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Font::Setup( void )
+{
+    this->currentFontName = this->NameFromPath( this->currentFontPath );
+    this->LoadCurrentSelection();
+}
+
+void Font::UpSet( void )
 {
 
 }
 
+
+//////////////////////////////////////////////////////////////////////////////
+
+int Font::GetNumFontsAvailable()
+{
+    QDir fontdir( this->fontDirectory );
+    fontdir.setNameFilters( QStringList() << "*.png");
+    QStringList fileList = fontdir.entryList();
+
+    return fileList.count();
+}
+
+QString Font::PathForFontAt( int which )
+{
+    if( which < 0 ) return kInternalFontPath;
+
+    QDir fontdir( this->fontDirectory );
+    fontdir.setNameFilters( QStringList() << "*.png");
+    QStringList fileList = fontdir.entryList();
+
+    if( which > fileList.count() )
+        return kInternalFontPath;
+
+    return( this->fontDirectory + "/" + fileList.at( which ));
+}
+
+QString Font::NameFromPath( QString pth )
+{
+    if( !pth.compare( kInternalFontPath )) return "internal font";
+
+    QString tmp = pth.left( pth.lastIndexOf(".") );
+
+    return tmp.right( tmp.length() - tmp.lastIndexOf( ("/")) -1 );
+}
+
+int Font::IndexOfPath( QString pth )
+{
+    for( int i=0 ; i<this->GetNumFontsAvailable() ; i++ )
+    {
+        if( !pth.compare( this->PathForFontAt(i)))
+            return i;
+    }
+
+    // didn't find it, go to the internal one
+    return -1;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+void Font::ToggleFont()
+{
+    int i = this->IndexOfPath( this->currentFontPath );
+
+    i++;
+    if( i >= this->GetNumFontsAvailable() ) {
+        i = -1;
+    }
+
+    this->currentFontPath = this->PathForFontAt( i );
+    this->currentFontName = this->NameFromPath( this->currentFontPath );
+
+    this->LoadCurrentSelection();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Font::LoadCurrentSelection()
+{
+    /* check to see if we're switching to the internal font */
+    if( !this->currentFontPath.compare( kInternalFontPath )) {
+        this->theFont.startchar = internalFont.startchar;
+        this->theFont.maxchar   = internalFont.maxchar;
+
+        std::memcpy( (void *) this->theFont.data,
+                     (void *) internalFont.data,
+                     (this->theFont.maxchar - this->theFont.startchar) * 8 );
+        emit this->NewFontLoaded();
+        return;
+    }
+
+    /* load the image file and parse it into the font struct */
+
+    QImage *fontimage = new QImage( this->currentFontPath );
+    if( !fontimage ) {
+        qDebug() << "ERROR: Couldn't load " << this->currentFontPath;
+        return;
+    }
+
+    if( (fontimage->width() != 289)  || (fontimage->height() != 73) )
+    {
+        qDebug() << "ERROR: Font was " << fontimage->width() << "x" << fontimage->height() << ", rather than 289x73!";
+        return;
+    }
+
+    /* for now, we're using a single fixed image size,
+     * 32 glyphs across, 8 glyphs down
+     * each glyph is 8x8 pixels, fixed
+     * each glyph is surrounded by a red box, with overlapping edges
+     */
+    this->theFont.startchar = 0;
+    this->theFont.maxchar   = 255;
+
+    int x=1;
+    int y=1;
+    for( int glyph = 0 ; glyph < 255 ; glyph++ )
+    {
+        /* read in the image data and convert it to bitsmashed */
+        for( int py=0 ; py<8 ; py++ )
+        {
+            unsigned char pixdata = 0x00;
+            if( qGreen( fontimage->pixel( x+0, y+py )) > 128 )   pixdata |= 0x80;
+            if( qGreen( fontimage->pixel( x+1, y+py )) > 128 )   pixdata |= 0x40;
+            if( qGreen( fontimage->pixel( x+2, y+py )) > 128 )   pixdata |= 0x20;
+            if( qGreen( fontimage->pixel( x+3, y+py )) > 128 )   pixdata |= 0x10;
+            if( qGreen( fontimage->pixel( x+4, y+py )) > 128 )   pixdata |= 0x08;
+            if( qGreen( fontimage->pixel( x+5, y+py )) > 128 )   pixdata |= 0x04;
+            if( qGreen( fontimage->pixel( x+6, y+py )) > 128 )   pixdata |= 0x02;
+            if( qGreen( fontimage->pixel( x+7, y+py )) > 128 )   pixdata |= 0x01;
+            this->theFont.data[ (glyph * 8) + py ] = pixdata;
+        }
+
+        /* advance to the next glyph */
+        x+=9;
+        if( x+8 > fontimage->width() ) {
+            x=1;
+            y+=9;
+        }
+    }
+
+    emit this->NewFontLoaded();
+}

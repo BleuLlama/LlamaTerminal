@@ -8,7 +8,7 @@
 #include "palettedframebuffer.h"
 #include "serialinterface.h"
 #include "textbuffer.h"
-//#include "font.h"
+#include "font.h"
 
 namespace Ui {
 class MainWindow;
@@ -31,6 +31,7 @@ private:
     PalettedFrameBuffer * pfb;
     TextBuffer * tb;
     SerialInterface * si;
+    Font * fnt;
 
 private:
     void ShowReady( void );
@@ -60,6 +61,8 @@ public slots:
     void SerialPortHasConnected();
     void SerialPortHasDisconnected();
     void SerialDidReceiveData();
+
+    void FontHasLoaded();
 
 private:
     QTimer timer;
