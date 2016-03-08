@@ -1,3 +1,33 @@
+/* 
+ * mainwindow
+ *
+ *  the code for the main window user interface (the core of the engine)
+ */
+
+/*
+ * The MIT License (MIT)
+ * Copyright (c) 2016 Scott Lawrence
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify,
+ * merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+*/
 #include <QDebug>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -20,20 +50,32 @@ MainWindow::MainWindow(QWidget *parent)
 
     this->pfb = new PalettedFrameBuffer( this );
     this->connect( this->pfb, SIGNAL(ScreenIsRendered()), this, SLOT( ScreenHasBeenUpdated() ) );
+    this->connect( this, SIGNAL(Load()), this->pfb, SLOT(LoadSettings()) );
+    this->connect( this, SIGNAL(Save()), this->pfb, SLOT(SaveSettings()) );
 
     this->tb = new TextBuffer( );
     this->connect( this->tb, SIGNAL(TextHasChanged()), this, SLOT( TextBufferHasChanged() ) );
+    this->connect( this, SIGNAL(Load()), this->tb, SLOT(LoadSettings()) );
+    this->connect( this, SIGNAL(Save()), this->tb, SLOT(SaveSettings()) );
 
     this->si = new SerialInterface();
     this->connect( this->si, SIGNAL( SerialPortConnected() ), this, SLOT( SerialPortHasConnected() ) );
     this->connect( this->si, SIGNAL( SerialPortDisconnected() ), this, SLOT( SerialPortHasDisconnected() ) );
     this->connect( this->si, SIGNAL( SerialReceivedData() ), this, SLOT( SerialDidReceiveData() ) );
+    this->connect( this, SIGNAL(Load()), this->si, SLOT(LoadSettings()) );
+    this->connect( this, SIGNAL(Save()), this->si, SLOT(SaveSettings()) );
 
     this->fnt = new Font();
     this->connect( this->fnt, SIGNAL( NewFontLoaded() ), this, SLOT( FontHasLoaded() ));
+    this->connect( this, SIGNAL(Load()), this->fnt, SLOT(LoadSettings()) );
+    this->connect( this, SIGNAL(Save()), this->fnt, SLOT(SaveSettings()) );
     this->fnt->Setup();
     this->pfb->SetFont( this->fnt->GetLFont() );
 
+    this->LoadRequested();
+    this->SaveRequested();
+
+    // get it set up for use
     this->pfb->FillWithPattern( kDisplayPatternDiagonals );
 
     unsigned char pens[] = { 0x10, 0x01, 0x23, 0x34, 0x45, 0x46, 0x99 };
@@ -44,12 +86,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->ShowDebug( kDebugItem_Colors );
     this->ShowReady();
 
-    this->connect( &this->timer,
-                   SIGNAL(timeout()),
-                          this,
-                          SLOT( timerTick() )
-                   );
-            this->timer.start( 30 );
+    this->connect( &this->timer, SIGNAL(timeout()),  this, SLOT( timerTick() ) );
+    this->timer.start( 30 ); /* 30ish ms */
 }
 
 
@@ -127,7 +165,7 @@ void MainWindow::ShowReady( void )
 
     // bars with version text
     tb->SetPen( 0x09, 0x09 ); tb->AddCharacters( ' ', 40 );
-    tb->SetPen( 0x01, 0x00 ); tb->AddText( "\n             LlamaTerm v0.02\n" );
+    tb->SetPen( 0x01, 0x00 ); tb->AddText( "\n             LlamaTerm " kLlamaTermVersion "\n" );
     tb->SetPen( 0x09, 0x09 ); tb->AddCharacters( ' ', 40 );
 
     // helpful
@@ -423,4 +461,13 @@ void MainWindow::timerTick( void )
         this->hidePrompt = false;
     }
     this->TextBufferHasChanged();
+}
+
+void MainWindow::SaveRequested( void )
+{
+    emit Save();
+}
+void MainWindow::LoadRequested( void )
+{
+    emit Load();
 }

@@ -1,7 +1,7 @@
 /* 
- * main
+ * globals
  *
- *  the main entry point for the QT program
+ *  various global defines and version information
  */
 
 /*
@@ -28,14 +28,24 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
 */
-#include "mainwindow.h"
-#include <QApplication>
+#include <QDebug>
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
+#ifndef GLOBALS_H
+#define GLOBALS_H
 
-    return a.exec();
-}
+/* Version History */
+
+#define kLlamaTermVersion "v0.02"
+/*
+ * v0.02 - 2016/3/6 Initial functionality
+ *
+ * v0.01 - 2016/3/x Building it up, importing bits from GfxTest, refactoring
+ */
+
+
+/* Framebuffer size */
+#define kDefaultWidth  (640)
+#define kDefaultHeight (480)
+
+#endif // GLOBALS_H
+

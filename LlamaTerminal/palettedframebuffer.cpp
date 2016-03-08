@@ -1,3 +1,35 @@
+/* 
+ * paletted frame buffer
+ *
+ *  an indexed frame buffer
+ *  - with multiple palette support
+ *  - hooks for settings
+ */
+
+/*
+ * The MIT License (MIT)
+ * Copyright (c) 2016 Scott Lawrence
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify,
+ * merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 #include <Qdebug>
 #include "palettedframebuffer.h"
@@ -133,6 +165,7 @@ PALETTE pals[] = {
     { "Commodore 64", &colorPalette[16 * 0], 0x03, 0x06, 0x0e },
     { "Deluxe Paint", &colorPalette[16 * 1], 0x03, 0x00, 0x08 },
     { "PC-DOS VGA",   &colorPalette[16 * 2], 0x0f, 0x00, 0x0f },
+    { "VT220-G",      &colorPalette[16 * 3], 0x0a, 0x00, 0x02 },
     { "xterm",        &colorPalette[16 * 3], 0x07, 0x00, 0x02 },
     { "Amiga 1.x",    &colorPalette[16 * 4], 0x01, 0x00, 0x03 },
     { "Amiga 2.x",    &colorPalette[16 * 5], 0x01, 0x00, 0x03 },
