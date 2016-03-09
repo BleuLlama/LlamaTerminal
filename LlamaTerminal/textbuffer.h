@@ -113,6 +113,16 @@ public:
     unsigned char GetFGPen() { return (this->pen & 0x0F); }
     unsigned char GetBGPen() { return ((this->pen >>4) & 0x0F ); }
 
+private:
+    int wrap;
+#define kWrap_Off   (0)
+#define kWrap_On    (1)
+
+public:
+    int GetWrap() { return this->wrap; }
+    void SetWrap( int w ) { this->wrap = w; }
+    void ToggleWrap() { this->wrap = (this->wrap)?0:1; }
+    QString GetWrapString() { if( this->wrap ) return "On"; else return "Off"; }
 
 signals:
     void TextHasChanged();

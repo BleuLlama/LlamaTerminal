@@ -148,16 +148,17 @@ void TextBuffer::AddCharacter( char ch )
 
 ////////////////////////////////////////////////////////////////
 
-
 void TextBuffer::SaveSettings()
 {
     SETUPSETTINGS();
-    s.setValue( "Text.Pen", this->pen );
+    s.setValue( kSettings_TextPen, this->pen );
+    s.setValue( kSettings_TermWrap, this->wrap );
 }
 
 void TextBuffer::LoadSettings()
 {
     SETUPSETTINGS();
 
-    this->pen = (unsigned char) s.value( "Text.pen", 0x10 ).toUInt();
+    this->pen = (unsigned char) s.value( kSettings_TextPen, 0x10 ).toUInt();
+    this->wrap = (unsigned char) s.value( kSettings_TermWrap, 1 ).toUInt();
 }

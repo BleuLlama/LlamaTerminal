@@ -498,27 +498,27 @@ void PalettedFrameBuffer::RenderTextColorBuffer( const unsigned char * color,
 void PalettedFrameBuffer::SaveSettings()
 {
     SETUPSETTINGS();
-    s.setValue( "Visual.PalId", this->palId );
-    s.setValue( "Visual.Prompt", this->promptType );
+    s.setValue( kSettings_VisualPalId, this->palId );
+    s.setValue( kSettings_TermPrompt, this->promptType );
 
-    s.setValue( "Visual.HSpacing", this->hSpacing );
-    s.setValue( "Visual.VSpacing", this->vSpacing );
-    s.setValue( "Visual.DoubleHoriz", this->doublehoriz );
-    s.setValue( "Visual.DoubleVert", this->doublevert );
-    s.setValue( "Visual.ScanLines", this->scanlines );
+    s.setValue( kSettings_VisualHSpacing, this->hSpacing );
+    s.setValue( kSettings_VisualVSpacing, this->vSpacing );
+    s.setValue( kSettings_VisualDoubleHoriz, this->doublehoriz );
+    s.setValue( kSettings_VisualDoubleVert, this->doublevert );
+    s.setValue( kSettings_VisualScanLines, this->scanlines );
 }
 
 void PalettedFrameBuffer::LoadSettings()
 {
     SETUPSETTINGS();
 
-    this->palId = s.value( "Visual.PalId", "" ).toInt();
-    this->promptType = s.value( "Visual.Prompt", kPrompt_Block ).toInt();
+    this->palId = s.value( kSettings_VisualPalId, "" ).toInt();
+    this->promptType = s.value( kSettings_TermPrompt, kPrompt_Block ).toInt();
 
-    this->hSpacing = s.value( "Visual.HSpacing", 0 ).toInt();
-    this->vSpacing = s.value( "Visual.VSpacing", 1 ).toInt();
-    this->doublehoriz = s.value( "Visual.DoubleHoriz", 1 ).toInt();
-    this->doublevert = s.value( "Visual.DoubleVert", 1 ).toInt();
+    this->hSpacing = s.value( kSettings_VisualHSpacing, 0 ).toInt();
+    this->vSpacing = s.value( kSettings_VisualVSpacing, 1 ).toInt();
+    this->doublehoriz = s.value( kSettings_VisualDoubleHoriz, 1 ).toInt();
+    this->doublevert = s.value( kSettings_VisualDoubleVert, 1 ).toInt();
 
-    this->scanlines = s.value( "Visual.ScanLines", 1 ).toInt();
+    this->scanlines = s.value( kSettings_VisualScanLines, 1 ).toInt();
 }

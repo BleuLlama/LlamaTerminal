@@ -756,21 +756,22 @@ void Font::RequestFontDirectory()
 
 //////////////////////////////////////////////////////////////////////////////
 
+
 void Font::SaveSettings()
 {
     SETUPSETTINGS();
-    s.setValue( "Font.Path", this->currentFontPath );
-    s.setValue( "Font.Name", this->currentFontName );
-    s.setValue( "Font.Directory", this->fontDirectory );
+    s.setValue( kSettings_FontPath, this->currentFontPath );
+    s.setValue( kSettings_FontName, this->currentFontName );
+    s.setValue( kSettings_FontDirectory, this->fontDirectory );
 }
 
 void Font::LoadSettings()
 {
     SETUPSETTINGS();
 
-    this->currentFontPath = s.value( "Font.Path", "" ).toString();
-    this->currentFontName = s.value( "Font.Name", "" ).toString();
-    this->fontDirectory = s.value( "Font.Directory", "" ).toString();
+    this->currentFontPath = s.value( kSettings_FontPath, "" ).toString();
+    this->currentFontName = s.value( kSettings_FontName, "" ).toString();
+    this->fontDirectory = s.value( kSettings_FontDirectory, "" ).toString();
 
     this->SetFontDirectory( this->fontDirectory );
     this->LoadCurrentSelection();

@@ -54,6 +54,37 @@ QString GetSettingsFile();
 #define SETUPSETTINGS_WIN() \
     QSettings s( GetSettingsFile() );
 
+//////////////////////////////////
+// Settings keys
+
+#define kSettings_AppVersion        "Main_AppVersion"
+
+#define kSettings_TermLocalEcho     "Terminal_LocalEcho"
+#define kSettings_TermWrap          "Terminal_Wrap"
+#define kSettings_TermPrompt        "Terminal_Prompt"
+
+#define kSettings_TextPen           "Text_Pen"
+
+#define kSettings_SerialName        "Serial_Name"
+#define kSettings_SerialLocation    "Serial_Location"
+#define kSettings_SerialDescription "Serial_Description"
+#define kSettings_SerialBaud        "Serial_Baud"
+#define kSettings_SerialBits        "Serial_Bits"
+#define kSettings_SerialParity      "Serial_Parity"
+#define kSettings_SerialFlow        "Serial_Flow"
+#define kSettings_SerialStop        "Serial_Stop"
+
+#define kSettings_VisualPalId       "Visual_PalId"
+#define kSettings_VisualHSpacing    "Visual_HSpacing"
+#define kSettings_VisualVSpacing    "Visual_VSpacing"
+#define kSettings_VisualDoubleHoriz "Visual_DoubleHoriz"
+#define kSettings_VisualDoubleVert  "Visual_DoubleVert"
+#define kSettings_VisualScanLines   "Visual_ScanLines"
+
+#define kSettings_FontPath          "Font_Path"
+#define kSettings_FontName          "Font_Name"
+#define kSettings_FontDirectory     "Font_Directory"
+
 
 #endif // GLOBALS_H
 

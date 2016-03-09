@@ -299,29 +299,29 @@ void SerialInterface::Send( QByteArray qba )
 void SerialInterface::SaveSettings()
 {
     SETUPSETTINGS();
-    s.setValue( "Serial.Name", this->deviceName );
-    s.setValue( "Serial.Location", this->deviceLocation );
-    s.setValue( "Serial.Description", this->deviceDescription );
+    s.setValue( kSettings_SerialName, this->deviceName );
+    s.setValue( kSettings_SerialLocation, this->deviceLocation );
+    s.setValue( kSettings_SerialDescription, this->deviceDescription );
 
-    s.setValue( "Serial.Baud", (long long) this->baud );
-    s.setValue( "Serial.Bits", this->bits );
-    s.setValue( "Serial.Parity", this->parity );
-    s.setValue( "Serial.Flow", this->flowcontrol );
-    s.setValue( "Serial.Stop", this->stop );
+    s.setValue( kSettings_SerialBaud, (long long) this->baud );
+    s.setValue( kSettings_SerialBits, this->bits );
+    s.setValue( kSettings_SerialParity, this->parity );
+    s.setValue( kSettings_SerialFlow, this->flowcontrol );
+    s.setValue( kSettings_SerialStop, this->stop );
 }
 
 void SerialInterface::LoadSettings()
 {
     SETUPSETTINGS();
 
-    this->deviceName = s.value( "Serial.Name", "" ).toString();
-    this->deviceLocation = s.value( "Serial.Location", "" ).toString();
-    this->deviceDescription = s.value( "Serial.Description", "" ).toString();
+    this->deviceName = s.value( kSettings_SerialName, "" ).toString();
+    this->deviceLocation = s.value( kSettings_SerialLocation, "" ).toString();
+    this->deviceDescription = s.value( kSettings_SerialDescription, "" ).toString();
 
-    this->baud = (long) s.value( "Serial.Baud", 9600 ).toLongLong();
-    this->bits = s.value( "Serial.Bits", 8 ).toInt();
-    this->parity = s.value( "Serial.Parity", QSerialPort::NoParity ).toInt();
-    this->flowcontrol = s.value( "Serial.Flow", QSerialPort::NoFlowControl ).toInt();
-    this->stop = s.value( "Serial.Stop", QSerialPort::OneStop ).toInt();
+    this->baud = (long) s.value( kSettings_SerialBaud, 9600 ).toLongLong();
+    this->bits = s.value( kSettings_SerialBits, 8 ).toInt();
+    this->parity = s.value( kSettings_SerialParity, QSerialPort::NoParity ).toInt();
+    this->flowcontrol = s.value( kSettings_SerialFlow, QSerialPort::NoFlowControl ).toInt();
+    this->stop = s.value( kSettings_SerialStop, QSerialPort::OneStop ).toInt();
 }
 

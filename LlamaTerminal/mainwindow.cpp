@@ -206,11 +206,12 @@ void MainWindow::ShowDebug( int items )
 }
 
 
-#define kMenu_Main   (0)
-#define kMenu_Serial (1)
-#define kMenu_Font   (2)
-#define kMenu_Video (3)
-#define kMenu_Quit   (4)
+#define kMenu_Main     (0)
+#define kMenu_Serial   (1)
+#define kMenu_Font     (2)
+#define kMenu_Video    (3)
+#define kMenu_Terminal (4)
+#define kMenu_Quit     (5)
 
 void MainWindow::DisplayMenu( void )
 {
@@ -227,6 +228,7 @@ void MainWindow::DisplayMenu( void )
         this->tb->AddText( "  s: serial\n");
         this->tb->AddText( "  f: font\n");
         this->tb->AddText( "  v: video\n");
+        this->tb->AddText( "  t: terminal\n");
         this->tb->AddText( "  x: exit menu (or alt)\n");
         this->tb->AddText( "  q: quit LlamaTerminal\n");
         break;
@@ -237,6 +239,18 @@ void MainWindow::DisplayMenu( void )
         this->tb->SetPen( 0x07, 0x00 );
         this->tb->AddText( "  y: yes, quit\n");
         this->tb->AddText( "  n: no, return\n");
+        break;
+
+    case( kMenu_Terminal ):
+        this->tb->AddText( "Terminal Menu:\n");
+        this->tb->SetPen( 0x01, 0x00 );
+
+        this->tb->AddText( "  c: " + this->pfb->GetPromptString() + " cursor\n" );
+        this->tb->AddText( "  e: ");
+            this->tb->AddText( this->localEcho? "Local echo\n" : "No echo\n" );
+        this->tb->AddText( "  w: wrap lines: " + this->tb->GetWrapString() + "\n" );
+
+        this->tb->AddText( "  x: exit menu\n");
         break;
 
     case( kMenu_Serial ):
@@ -251,8 +265,6 @@ void MainWindow::DisplayMenu( void )
             this->tb->AddText( "  c: ");
                 this->tb->AddText( this->si->GetConnected()? "Connected\n" : "Not connected\n" );
 
-            this->tb->AddText( "  e: ");
-                this->tb->AddText( this->localEcho? "Local echo\n" : "No echo\n" );
             if( !this->si->GetConnected() ) {
                 this->tb->AddText( "  r: " + QString::number( si->GetBaud() ) + " baud\n");
                 this->tb->AddText( "  b: " + QString::number( si->GetBits() ) + " bits\n");
@@ -287,7 +299,6 @@ void MainWindow::DisplayMenu( void )
         this->tb->SetPen( 0x01, 0x00 );
 
         this->tb->AddText( "  k: clear\n" );
-        this->tb->AddText( "  c: " + this->pfb->GetPromptString() + " cursor\n" );
         this->tb->AddText( "  p: " + this->pfb->GetPaletteString() + "\n" );
         this->tb->AddText( "  x: exit menu\n");
         break;
@@ -340,6 +351,7 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
             switch( ch ) {
             case( 'd' ): this->ShowDebug( kDebugItem_EVERYTHING ); break;
             case( 's' ): this->menuID = kMenu_Serial; break;
+            case( 't' ): this->menuID = kMenu_Terminal; break;
             case( 'v' ): this->menuID = kMenu_Video; break;
             case( 'f' ): this->menuID = kMenu_Font; break;
             case( 'q' ): this->menuID = kMenu_Quit; break;
@@ -395,7 +407,18 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
                 // ignore, and no error printed
                 break;
 
+            case( 'x' ): this->menuID = kMenu_Main; break;
+            default:
+                this->tb->AddText( "?\n" );
+                break;
+            }
+            break;
+
+        case( kMenu_Terminal ): /* ******** Terminal Menu ******** */
+            switch( ch ) {
+            case( 'c' ): this->pfb->TogglePromptType(); break;
             case( 'e' ): this->localEcho = (this->localEcho)?0:1; break;
+            case( 'w' ): this->tb->ToggleWrap(); break;
 
             case( 'x' ): this->menuID = kMenu_Main; break;
             default:
@@ -407,7 +430,6 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
         case( kMenu_Video ): /* ******** Video Menu ******** */
             switch( ch ) {
             case( 'k' ): this->tb->Clear(); break;
-            case( 'c' ): this->pfb->TogglePromptType(); break;
             case( 'p' ):     /* change palette */
                 this->pfb->TogglePalette();
                 this->ShowDebug( kDebugItem_Colors );
@@ -471,18 +493,19 @@ void MainWindow::timerTick( void )
     this->TextBufferHasChanged();
 }
 
+///////////////////////////////////////////////////////////
 
 void MainWindow::SaveRequested( void )
 {
     SETUPSETTINGS();
-    s.setValue( "Main.AppVersion", kLlamaTermVersion );
-    s.setValue( "Connection.LocalEcho", this->localEcho );
+    s.setValue( kSettings_AppVersion, kLlamaTermVersion );
+    s.setValue( kSettings_TermLocalEcho, this->localEcho );
     emit Save();
 }
 
 void MainWindow::LoadRequested( void )
 {
     SETUPSETTINGS();
-    this->localEcho = s.value( "Connection.LocalEcho", false ).toBool();
+    this->localEcho = s.value( kSettings_TermLocalEcho, false ).toBool();
     emit Load();
 }
