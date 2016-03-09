@@ -54,7 +54,8 @@ public:
     ~MainWindow();
 
 public:
-    void keyPressEvent(QKeyEvent* e);
+    void keyPressEvent( QKeyEvent* e );
+    void resizeEvent( QResizeEvent *e );
     void DisplayMenu( void );
 
 private:

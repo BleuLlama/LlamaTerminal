@@ -104,8 +104,8 @@ signals:
 public slots:
     void readData();
 
-    void SaveSettings( void ) { qDebug() << "Serial save"; }
-    void LoadSettings( void ) { qDebug() << "Serial load"; }
+    void SaveSettings( void );
+    void LoadSettings( void );
 };
 
 #endif // SERIALINTERFACE_H

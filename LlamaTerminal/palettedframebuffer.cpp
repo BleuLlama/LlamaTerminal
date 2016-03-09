@@ -492,3 +492,33 @@ void PalettedFrameBuffer::RenderTextColorBuffer( const unsigned char * color,
     /* and flush it to the screen */
     this->RenderScreen();
 }
+
+//////////////////////////////////////////////////////////////////////////////
+
+void PalettedFrameBuffer::SaveSettings()
+{
+    SETUPSETTINGS();
+    s.setValue( "Visual.PalId", this->palId );
+    s.setValue( "Visual.Prompt", this->promptType );
+
+    s.setValue( "Visual.HSpacing", this->hSpacing );
+    s.setValue( "Visual.VSpacing", this->vSpacing );
+    s.setValue( "Visual.DoubleHoriz", this->doublehoriz );
+    s.setValue( "Visual.DoubleVert", this->doublevert );
+    s.setValue( "Visual.ScanLines", this->scanlines );
+}
+
+void PalettedFrameBuffer::LoadSettings()
+{
+    SETUPSETTINGS();
+
+    this->palId = s.value( "Visual.PalId", "" ).toInt();
+    this->promptType = s.value( "Visual.Prompt", kPrompt_Block ).toInt();
+
+    this->hSpacing = s.value( "Visual.HSpacing", 0 ).toInt();
+    this->vSpacing = s.value( "Visual.VSpacing", 1 ).toInt();
+    this->doublehoriz = s.value( "Visual.DoubleHoriz", 1 ).toInt();
+    this->doublevert = s.value( "Visual.DoubleVert", 1 ).toInt();
+
+    this->scanlines = s.value( "Visual.ScanLines", 1 ).toInt();
+}

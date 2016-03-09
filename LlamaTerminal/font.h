@@ -61,6 +61,7 @@ private:
 public:
     void SetFontDirectory( QString d ) { this->fontDirectory = d; }
     QString GetFontDirectory( ) { return this->fontDirectory; }
+    void RequestFontDirectory();
 
 private:
     void LoadCurrentSelection();
@@ -86,8 +87,8 @@ signals:
     void NewFontLoaded( void );
 
 public slots:
-    void SaveSettings( void ) { qDebug() << "Font save"; }
-    void LoadSettings( void ) { qDebug() << "Font load"; }
+    void SaveSettings( void );
+    void LoadSettings( void );
 };
 
 #endif // FONT_H

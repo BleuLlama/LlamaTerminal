@@ -29,6 +29,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
 */
 #include <QDebug>
+#include <QSettings>
 
 #ifndef GLOBALS_H
 #define GLOBALS_H
@@ -46,6 +47,13 @@
 /* Framebuffer size */
 #define kDefaultWidth  (640)
 #define kDefaultHeight (480)
+
+QString GetSettingsFile();
+#define SETUPSETTINGS() \
+    QSettings s( "UmlautLlama.com", "LlamaTerminal" );
+#define SETUPSETTINGS_WIN() \
+    QSettings s( GetSettingsFile() );
+
 
 #endif // GLOBALS_H
 

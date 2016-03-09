@@ -553,7 +553,7 @@ LFONT internalFont = {
 
 Font::Font(QObject *parent)
     : QObject(parent)
-    , fontDirectory( "/Users/slawrence/proj/LlamaTerminal/Fonts" )
+    , fontDirectory( "/" )
     , currentFontPath( kInternalFontPath )
     , currentFontName( "" )
 {
@@ -654,7 +654,10 @@ void Font::SaveStruct()
     for( int i=0 ; i < 256 ; i++ )
     {
         char buf[132];
-        snprintf( buf, 132, "    0x%02x, 0x%02x, 0x%02x, 0x%02x,  0x%02x, 0x%02x, 0x%02x, 0x%02x,",
+        char ch = 0;
+        if( i < 32 || i > 126 ) ch = '.';
+        else ch = (char) i;
+        snprintf( buf, 132, "    0x%02x, 0x%02x, 0x%02x, 0x%02x,  0x%02x, 0x%02x, 0x%02x, 0x%02x,  /* %d: %c */",
                 this->theFont.data[ (i*8) + 0 ],
                 this->theFont.data[ (i*8) + 1 ],
                 this->theFont.data[ (i*8) + 2 ],
@@ -662,7 +665,8 @@ void Font::SaveStruct()
                 this->theFont.data[ (i*8) + 4 ],
                 this->theFont.data[ (i*8) + 5 ],
                 this->theFont.data[ (i*8) + 6 ],
-                this->theFont.data[ (i*8) + 7 ] );
+                this->theFont.data[ (i*8) + 7 ],
+                i, ch );
         qDebug() << buf;
 
     }
@@ -733,5 +737,41 @@ void Font::LoadCurrentSelection()
     }
 
     emit this->NewFontLoaded();
-    this->SaveStruct();
+    //this->SaveStruct();
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+#include <QFileDialog>
+
+void Font::RequestFontDirectory()
+{
+    QString str = QFileDialog::getExistingDirectory( NULL,
+                                                     "Choose your fonts directory",
+                                                     this->fontDirectory,
+                                                     QFileDialog::DontResolveSymlinks );
+    this->SetFontDirectory( str );
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Font::SaveSettings()
+{
+    SETUPSETTINGS();
+    s.setValue( "Font.Path", this->currentFontPath );
+    s.setValue( "Font.Name", this->currentFontName );
+    s.setValue( "Font.Directory", this->fontDirectory );
+}
+
+void Font::LoadSettings()
+{
+    SETUPSETTINGS();
+
+    this->currentFontPath = s.value( "Font.Path", "" ).toString();
+    this->currentFontName = s.value( "Font.Name", "" ).toString();
+    this->fontDirectory = s.value( "Font.Directory", "" ).toString();
+
+    this->SetFontDirectory( this->fontDirectory );
+    this->LoadCurrentSelection();
 }

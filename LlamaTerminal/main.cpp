@@ -29,6 +29,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "mainwindow.h"
+#include "globals.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
@@ -39,3 +40,10 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
+
+QString GetSettingsFile()
+{
+    QString settingsFile = QApplication::applicationDirPath()+ "/LlamaTerminal.config";
+    return settingsFile;
+}
+

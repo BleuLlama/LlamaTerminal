@@ -269,6 +269,7 @@ void MainWindow::DisplayMenu( void )
         this->tb->AddText( "Font Menu:\n");
         this->tb->SetPen( 0x01, 0x00 );
 
+        this->tb->AddText( "  d: Pick fonts directory\n" );
         this->tb->AddText( "  f: " + this->fnt->GetFontName() + "\n" );
         this->tb->AddText( "  h: " );
             this->tb->AddText( this->pfb->GetDoubleHoriz() ? "Horiz Double\n" : "Horiz Single\n" );
@@ -296,6 +297,11 @@ void MainWindow::DisplayMenu( void )
     }
     this->delayRender = false;
     this->TextBufferHasChanged();
+}
+
+void MainWindow::resizeEvent(QResizeEvent * e)
+{
+    qDebug() << e;
 }
 
 /* this is called when a key is pressed
@@ -357,7 +363,6 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
                 break;
             }
             this->menuID = kMenu_Main;
-
             break;
 
         case( kMenu_Serial ): /* ******** Serial Menu ******** */
@@ -417,6 +422,7 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
 
         case( kMenu_Font ): /* ******** Font Menu ******** */
             switch( ch ) {
+            case( 'd' ): this->fnt->RequestFontDirectory(); break; /* pick font directory */
             case( 'f' ): this->fnt->ToggleFont(); break; /* font */
             case( 'h' ): this->pfb->ToggleDoubleHoriz(); break; /* double horizontal pixels */
             case( 'v' ): this->pfb->ToggleDoubleVert(); break;  /* double vertical pixels */
@@ -434,11 +440,13 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
             break;
         }
 
+        /* and save out any changes */
+        this->SaveRequested();
+
         /* and redisplay the menu... */
         if( this->runMode == kRunMode_Menu ) {
             this->DisplayMenu();
         }
-
     } else {
         /* serial mode */
         if( this->localEcho ) {
@@ -463,11 +471,18 @@ void MainWindow::timerTick( void )
     this->TextBufferHasChanged();
 }
 
+
 void MainWindow::SaveRequested( void )
 {
+    SETUPSETTINGS();
+    s.setValue( "Main.AppVersion", kLlamaTermVersion );
+    s.setValue( "Connection.LocalEcho", this->localEcho );
     emit Save();
 }
+
 void MainWindow::LoadRequested( void )
 {
+    SETUPSETTINGS();
+    this->localEcho = s.value( "Connection.LocalEcho", false ).toBool();
     emit Load();
 }

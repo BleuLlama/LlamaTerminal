@@ -294,5 +294,34 @@ void SerialInterface::Send( QByteArray qba )
     }
 }
 
+////////////////////////////////////////////////////////////////
 
+void SerialInterface::SaveSettings()
+{
+    SETUPSETTINGS();
+    s.setValue( "Serial.Name", this->deviceName );
+    s.setValue( "Serial.Location", this->deviceLocation );
+    s.setValue( "Serial.Description", this->deviceDescription );
+
+    s.setValue( "Serial.Baud", (long long) this->baud );
+    s.setValue( "Serial.Bits", this->bits );
+    s.setValue( "Serial.Parity", this->parity );
+    s.setValue( "Serial.Flow", this->flowcontrol );
+    s.setValue( "Serial.Stop", this->stop );
+}
+
+void SerialInterface::LoadSettings()
+{
+    SETUPSETTINGS();
+
+    this->deviceName = s.value( "Serial.Name", "" ).toString();
+    this->deviceLocation = s.value( "Serial.Location", "" ).toString();
+    this->deviceDescription = s.value( "Serial.Description", "" ).toString();
+
+    this->baud = (long) s.value( "Serial.Baud", 9600 ).toLongLong();
+    this->bits = s.value( "Serial.Bits", 8 ).toInt();
+    this->parity = s.value( "Serial.Parity", QSerialPort::NoParity ).toInt();
+    this->flowcontrol = s.value( "Serial.Flow", QSerialPort::NoFlowControl ).toInt();
+    this->stop = s.value( "Serial.Stop", QSerialPort::OneStop ).toInt();
+}
 

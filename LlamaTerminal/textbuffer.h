@@ -118,8 +118,8 @@ signals:
     void TextHasChanged();
 
 public slots:
-    void SaveSettings( void ) { qDebug() << "Text save"; }
-    void LoadSettings( void ) { qDebug() << "Text load"; }
+    void SaveSettings( void );
+    void LoadSettings( void );
 
 };
 

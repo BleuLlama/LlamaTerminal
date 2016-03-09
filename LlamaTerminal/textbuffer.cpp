@@ -145,3 +145,19 @@ void TextBuffer::AddCharacter( char ch )
 
     emit this->TextHasChanged();
 }
+
+////////////////////////////////////////////////////////////////
+
+
+void TextBuffer::SaveSettings()
+{
+    SETUPSETTINGS();
+    s.setValue( "Text.Pen", this->pen );
+}
+
+void TextBuffer::LoadSettings()
+{
+    SETUPSETTINGS();
+
+    this->pen = (unsigned char) s.value( "Text.pen", 0x10 ).toUInt();
+}

@@ -175,8 +175,8 @@ signals:
 public slots:
     void RenderScreen( void );
 
-    void SaveSettings( void ) { qDebug() << "Framebuffer save"; }
-    void LoadSettings( void ) { qDebug() << "Framebuffer load"; }
+    void SaveSettings( void );
+    void LoadSettings( void );
 };
 
 #endif // PALETTEDFRAMEBUFFER_H
