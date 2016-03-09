@@ -315,6 +315,23 @@ void MainWindow::resizeEvent(QResizeEvent * e)
     qDebug() << e;
 }
 
+void MainWindow::mouseMoveEvent( QMouseEvent * e )
+{
+    qDebug() << e;
+}
+
+void MainWindow::mousePressEvent( QMouseEvent * e )
+{
+    qDebug() << e;
+}
+
+void MainWindow::mouseReleaseEvent( QMouseEvent * e )
+{
+    qDebug() << e;
+}
+
+
+
 /* this is called when a key is pressed
  *  No need to Connect() to this, it just magically happens
  */

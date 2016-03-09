@@ -33,6 +33,7 @@
 
 #include <QMainWindow>
 #include <QKeyEvent>
+#include <QMouseEvent>
 #include <QTimer>
 
 #include "globals.h"
@@ -55,7 +56,10 @@ public:
 
 public:
     void keyPressEvent( QKeyEvent* e );
-    void resizeEvent( QResizeEvent *e );
+    void resizeEvent( QResizeEvent * e );
+    void mouseMoveEvent( QMouseEvent * e );
+    void mousePressEvent( QMouseEvent * e );
+    void mouseReleaseEvent( QMouseEvent * e );
     void DisplayMenu( void );
 
 private:
