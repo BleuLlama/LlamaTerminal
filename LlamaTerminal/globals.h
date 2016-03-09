@@ -36,11 +36,12 @@
 
 /* Version History */
 
-#define kLlamaTermVersion "v0.02"
+#define kLlamaTermVersion "v0.04"
 /*
- * v0.02 - 2016/3/6 Initial functionality
- *
- * v0.01 - 2016/3/x Building it up, importing bits from GfxTest, refactoring
+ * v0.04 - 2016/03/09 Fixes to cleanly build on Windows (snprintf)
+ * v0.03 - 2016/03/08 Settings, Framebuffer, Load/Save, Font support
+ * v0.02 - 2016/03/06 Initial functionality
+ * v0.01 - 2016/03/xx Building it up, importing bits from GfxTest, refactoring
  */
 
 
@@ -85,6 +86,14 @@ QString GetSettingsFile();
 #define kSettings_FontName          "Font_Name"
 #define kSettings_FontDirectory     "Font_Directory"
 
+
+#ifdef Q_OS_WIN32
+
+#ifndef snprintf
+int snprintf(char * str, size_t size, const char * format, ...);
+#endif
+
+#endif // Q_OS_WIN32
 
 #endif // GLOBALS_H
 
