@@ -7,6 +7,7 @@
  *  
  *  yorgle@gmail.com
  *  
+ *  v1.2 2016-03-08  AZ added to help decode word wrap ('a')
  *  v1.1 2016-02-29  Echo added
  *  v1.0 2016-02-24  Initial version
  */
@@ -279,6 +280,84 @@ void printText( )
   } while( nrows < rows );
 }
 
+int incrementingCH = 'a';
+
+void AZWrite( const char cp )
+{
+  if( cp >= 'a' && cp <= 'z' ) {
+    Serial.write( incrementingCH );
+    incrementingCH++;
+    
+  } else if( cp >= 'A' && cp <= 'Z' ) {
+    Serial.write( incrementingCH - 0x20 );
+    incrementingCH++;
+    
+  } else {
+    Serial.write( cp );
+  }
+
+  
+  if( incrementingCH > 'z' ) {
+    incrementingCH = 'a';
+  }
+}
+
+void AZPrint( const char * cpw )
+{
+  while( *cpw ) {
+    AZWrite( *cpw );
+    cpw++;
+  }
+}
+
+void printAZText( )
+{ 
+  const char * cp;
+  int idx = 0;
+  int ncols = 0;
+  int nrows = 0;
+  
+  int w = 0;
+
+  // only continue for the number of rows we want
+  do {
+    // see if it will fit on the line
+    w = strlen( lipsum[idx] );
+    if( ((ncols + w ) >= cols) || (w==0) ) {
+      Serial.println( "" );
+      ncols = 0;
+      nrows++;
+    }
+
+    // see if we're past rows
+    if( nrows < rows ) {
+      // put it on this row
+      if( ncols != 0 ) {
+        Serial.print( " " );
+        ncols++;
+      }
+
+      if( wait > 0 ) {
+        cp = lipsum[idx];
+        while( *cp != '\0' ) {
+          AZWrite( *cp );
+          cp++;
+          delay( wait );
+        }
+      } else {
+        AZPrint( lipsum[idx] );
+      }
+      ncols += w;
+    }
+
+    idx++;
+    if( lipsum[idx] == NULL ) {
+      idx = 0;
+    }
+    
+  } while( nrows < rows );
+}
+
 
 /////////////////////////////////////////
 // serial port line reading
@@ -324,6 +403,7 @@ void loop()
 
   if( !strcmp( line, "h" )) {
     Serial.println( F("       t - text") );
+    Serial.println( F("       a - a-z text") );
     Serial.println( F("       ? - settings") );
     Serial.println( F("  c<n> - cols") );
     Serial.println( F("  r<n> - rows") );
@@ -352,8 +432,8 @@ void loop()
     else echoSet( 0 );
   }
   
-  
   else if( !strcmp( line, "t" )) printText();
+  else if( !strcmp( line, "a" )) printAZText();
 
   else err = true;
 
