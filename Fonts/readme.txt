@@ -55,7 +55,7 @@ amiga.topaz.2.sans.png
 
 vt220.png
 	Created by myself in PikoPixel.  Pixel-based on GlassTTY
-	http://svo.2.staticpublic.s3-website-us-east-1.amazonaws.com/glasstty/ 
+	    	http://www.spacerogue.net/wordpress/?p=356
 
 	Looks best doubled-vertical, single horizontal, scanlines.
 
