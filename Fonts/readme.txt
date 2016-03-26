@@ -67,8 +67,37 @@ TI994A.png
 	Looks best square.
 
 
+Commodore.128.png
+Commodore.64.png
+Commodore.Pet.png
+	Created by myself in Pikopixel, based on font glyphs from here:
+	        http://www.kreativekorp.com/software/fonts/c64.shtml
+
+	The "Pet" version of the font should be used for PET, CBM
+	and VIC/VC-20 targets.  There are only minor differences
+	to lowercase letters between the 64 and 128 versions.
+
+	Look best double vertical and horizontal, depending on target.
 
 
+Apple.II.png
+	Created by myself in Pikopixel, based on font glyphs from here:
+		http://www.kreativekorp.com/software/fonts/apple2.shtml
+
+	Look best square.
+
+MSX.png
+	Converted from the imagery here:
+		http://uzebox.org/wiki/index.php?title=Font_Bitmaps
+
+ZX.Spectrum.png
+	Converted from the imagery here:
+		http://uzebox.org/wiki/index.php?title=Font_Bitmaps
+
+Atari.800.png
+	Partial font, made by me, based on a few Atari 800 screenshots.
+	Most of it is the Commodore 64 font, but the digits, upper
+	and lowercase glyphs are correct.
 
 reference:
 
