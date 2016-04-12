@@ -14,6 +14,9 @@ All fonts are in the MS-DOS extended character style, with ASCII
 characters at the low range, and accented characters, ANSI graphics,
 and then math graphics, in an attempt to standardize the font format.
 
+All of these fonts are free to use under The MIT License, as described
+in the directory above this one.
+
 - Scott Lawrence
   yorgle@gmail.com
   March 2016
@@ -98,6 +101,22 @@ Atari.800.png
 	Partial font, made by me, based on a few Atari 800 screenshots.
 	Most of it is the Commodore 64 font, but the digits, upper
 	and lowercase glyphs are correct.
+
+ADM-3A.png
+	I wanted this to be as pixel-perfect to the original as
+	possible.  It is a 5x7 font, and only had basic characters
+	and uppercase lowercase were in separate roms.  It required
+	a lot of hand-holding to get it all to work.  I also
+	reformatted placement to fit in my font format, and I created
+	glyphs for accented and math characters, while trying to
+	retain the awkwardness of the original glyphs.
+
+	Converted from the roms here:
+		http://juliepalooza.8m.com/sl/adm3a-2.htm
+
+	Thanks to @Twylo for inspiration on this!
+
+	Looks best with a font spacing of -2 (to be implemented.)
 
 reference:
 
