@@ -32,7 +32,7 @@
 #include <QDir>
 #include <QDebug>
 #include <QImage>
-
+#include <QFileInfo>
 #include "font.h"
 
 /*
@@ -586,6 +586,18 @@ void Font::UpSet( void )
 
 
 //////////////////////////////////////////////////////////////////////////////
+#ifdef NEVER
+bool Font::FileExists(QString path)
+{
+    QFileInfo checkFile(path);
+    // check if file exists and if yes: Is it really a file and no directory?
+    if (checkFile.exists() && checkFile.isFile()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+#endif
 
 int Font::GetNumFontsAvailable()
 {
@@ -752,6 +764,7 @@ void Font::RequestFontDirectory()
                                                      this->fontDirectory,
                                                      QFileDialog::DontResolveSymlinks );
     this->SetFontDirectory( str );
+    this->SaveSettings();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -765,14 +778,38 @@ void Font::SaveSettings()
     s.setValue( kSettings_FontDirectory, this->fontDirectory );
 }
 
+
 void Font::LoadSettings()
 {
     SETUPSETTINGS();
 
-    this->currentFontPath = s.value( kSettings_FontPath, "" ).toString();
-    this->currentFontName = s.value( kSettings_FontName, "" ).toString();
+    // 1. setup the font directory
     this->fontDirectory = s.value( kSettings_FontDirectory, "" ).toString();
-
     this->SetFontDirectory( this->fontDirectory );
+
+    // 2. set up the font name
+    this->currentFontName = s.value( kSettings_FontName, "" ).toString();
+
+    // 3. set up the font path.
+    this->currentFontPath = "";
+
+#ifdef NEVER
+    // if the font path is valid, we're fine.  Otherwise, we need to search throug
+    // the font directory for the correct font.
+    if( !this->FileExists( this->currentFontPath ) )
+    {
+        /* font not found, need to figure it out */
+    }
+#endif
+    // 3a. find the font in the directory, if it exists
+
+    for( int j=0 ; j < this->GetNumFontsAvailable() ; j++ ) {
+        QString pth = this->PathForFontAt( j );
+        QString nm = this->NameFromPath( pth );
+        if( !nm.compare( this->currentFontName )) {
+            this->currentFontPath = pth;
+        }
+    }
+
     this->LoadCurrentSelection();
 }

@@ -36,8 +36,11 @@
 
 /* Version History */
 
-#define kLlamaTermVersion "v0.04"
+#define kLlamaTermVersion "v0.07"
 /*
+ * v0.07 - 2016/04/19 New character based rendering in progress
+ * v0.06 - 2016/03/21 Restructuring setup/settings, theme loads font (by name)
+ * v0.05 - 2016/03/20 preliminary theme support
  * v0.04 - 2016/03/09 Fixes to cleanly build on Windows (snprintf)
  * v0.03 - 2016/03/08 Settings, Framebuffer, Load/Save, Font support
  * v0.02 - 2016/03/06 Initial functionality
@@ -58,33 +61,41 @@ QString GetSettingsFile();
 //////////////////////////////////
 // Settings keys
 
-#define kSettings_AppVersion        "Main_AppVersion"
+#define kSettings_AppVersion        "AppVersion"
 
-#define kSettings_TermLocalEcho     "Terminal_LocalEcho"
-#define kSettings_TermWrap          "Terminal_Wrap"
-#define kSettings_TermPrompt        "Terminal_Prompt"
+#define kSettings_PromptStyle       "PromptStyle"
+#define kSettings_DecorationStyle   "DecorationStyle"
+#define kSettings_DecorationSize    "DecorationSize"
+#define kSettings_DecorationColor   "DecorationColor"
+#define kSettings_BackgroundColor   "BackgroundColor"
+#define kSettings_LocalEcho         "LocalEcho"
+#define kSettings_TextWrap          "TextWrap"
+#define kSettings_TextPen           "TextPen"
 
-#define kSettings_TextPen           "Text_Pen"
+#define kSettings_PortName          "PortName"
+#define kSettings_PortLocation      "PortLocation"
+#define kSettings_PortDescription   "PortDescription"
 
-#define kSettings_SerialName        "Serial_Name"
-#define kSettings_SerialLocation    "Serial_Location"
-#define kSettings_SerialDescription "Serial_Description"
-#define kSettings_SerialBaud        "Serial_Baud"
-#define kSettings_SerialBits        "Serial_Bits"
-#define kSettings_SerialParity      "Serial_Parity"
-#define kSettings_SerialFlow        "Serial_Flow"
-#define kSettings_SerialStop        "Serial_Stop"
+#define kSettings_CommBaud          "CommBaud"
+#define kSettings_CommBits          "CommBits"
+#define kSettings_CommParity        "CommParity"
+#define kSettings_CommFlow          "CommFlow"
+#define kSettings_CommStop          "CommStop"
 
-#define kSettings_VisualPalId       "Visual_PalId"
-#define kSettings_VisualHSpacing    "Visual_HSpacing"
-#define kSettings_VisualVSpacing    "Visual_VSpacing"
-#define kSettings_VisualDoubleHoriz "Visual_DoubleHoriz"
-#define kSettings_VisualDoubleVert  "Visual_DoubleVert"
-#define kSettings_VisualScanLines   "Visual_ScanLines"
+#define kSettings_PaletteId         "PaletteId"          /* themeable */
+#define kSettings_FontHSpacing      "FontHSpacing"       /* themeable */
+#define kSettings_FontVSpacing      "FontVSpacing"       /* themeable */
+#define kSettings_FontDoubleHoriz   "FontDoubleHoriz"    /* themeable */
+#define kSettings_FontDoubleVert    "FontDoubleVert"     /* themeable */
+#define kSettings_FontScanLines     "FontScanLines"      /* themeable */
 
-#define kSettings_FontPath          "Font_Path"
-#define kSettings_FontName          "Font_Name"
-#define kSettings_FontDirectory     "Font_Directory"
+#define kSettings_FontPath          "FontPath"           /* themeable */
+#define kSettings_FontName          "FontName"           /* themeable */
+#define kSettings_FontDirectory     "FontDirectory"
+
+#define kSettings_ThemePath         "ThemePath"
+#define kSettings_ThemeName         "ThemeName"
+#define kSettings_ThemeDirectory    "ThemeDirectory"
 
 
 #ifdef Q_OS_WIN32

@@ -1,7 +1,7 @@
-/* 
- * text buffer header
+/*
+ * TextPipe
  *
- *  maintains the text buffer and settings
+ *  Handles sending the text received to the buffers for display and logging
  */
 
 /*
@@ -28,46 +28,80 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
 */
-#ifndef TEXTBUFFER_H
-#define TEXTBUFFER_H
+
+#ifndef TEXTPIPE_H
+#define TEXTPIPE_H
 
 #include <QObject>
-#include "globals.h"
+#include "palettedframebuffer.h"
 
-class TextBuffer : public QObject
+class TextPipe : public QObject
 {
     Q_OBJECT
-
 public:
-    TextBuffer(QObject *parent = 0);
-    ~TextBuffer();
+    explicit TextPipe(QObject *parent = 0);
+    ~TextPipe();
 
 private:
-    int rows;
-    int cols;
-    unsigned char * text;
-    unsigned char * color;
+    int wrap;
+#define kWrap_Off   (0)
+#define kWrap_On    (1)
 
 public:
-    void Setup( int rows, int cols );
-    void UpSet( void );
+    int GetWrap() { return this->wrap; }
+    void SetWrap( int w ) { this->wrap = w; }
+    void ToggleWrap() { this->wrap = (this->wrap)?0:1; }
+    QString GetWrapString() { if( this->wrap ) return "On"; else return "Off"; }
 
-    int GetRows( void ) { return this->rows; }
-    int GetCols( void ) { return this->cols; }
-    unsigned char * GetText( void ) { return this->text; }
-    unsigned char * GetColor( void ) { return this->color; }
-
-
-    /* text buffer interactions */
 private:
-    long textX;
+    PalettedFrameBuffer * pfb;
+public:
+    void setPfb( PalettedFrameBuffer * p );
+
+private:
+    unsigned char pen;
 
 public:
-    /* scroll the text by one row */
-    void ScrollOneRow( bool suppressSignal = false );
+    void SetPen( unsigned char pen ) {
+        this->pen = pen;
+    }
 
-    /* add a character */
-    void AddCharacter( char ch );
+    void SetPen( unsigned char fg, unsigned char bg ) {
+        this->SetPen( (fg & 0x0f) | ((bg & 0x0f)<<4) );
+    }
+
+    unsigned char GetPen() { return this->pen; }
+    unsigned char GetFGPen() { return (this->pen & 0x0F); }
+    unsigned char GetBGPen() { return ((this->pen >>4) & 0x0F ); }
+
+
+private: /* text positioning */
+    int textCursorX;
+    int textCursorY;
+    int textCols;
+    int textRows;
+
+public:
+    // move cursor to 0,0
+    void CursorHome() { this->textCursorX = 0; this->textCursorY = 0; }
+
+    // clear the text area
+    void TextClear();
+
+    // scroll the text area by one text line
+    void TextScroll();
+
+    // handle new line
+    void AddNewline();
+    // handle new character
+    void AdvanceCursor();
+
+
+    // add characters to the text area
+    void AddCharacter( const unsigned char ch );
+
+    // render the character down into the PFB
+    void DrawCharacter( unsigned char pen, const unsigned char ch );
 
     void AddCharacters( char ch, long count ) {
         while( count-- ) this->AddCharacter( ch );
@@ -86,44 +120,6 @@ public:
     void AddText( QString str ) {
         this->AddText( str.toUtf8().data() );
     }
-
-    int GetCursorX( void ) { return this->textX; }
-
-    void Clear( void );
-
-    void Dump( void );
-
-    /* pen is an unsigned char where the bottom nibble is the fg, background is shifted
-     * 0xBF
-     * All of the pen interaction functions are here in the class definition...
-     */
-private:
-    unsigned char pen;
-
-public:
-    void SetPen( unsigned char pen ) {
-        this->pen = pen;
-    }
-
-    void SetPen( unsigned char fg, unsigned char bg ) {
-        this->SetPen( (fg & 0x0f) | ((bg & 0x0f)<<4) );
-    }
-
-    unsigned char GetPen() { return this->pen; }
-    unsigned char GetFGPen() { return (this->pen & 0x0F); }
-    unsigned char GetBGPen() { return ((this->pen >>4) & 0x0F ); }
-
-private:
-    int wrap;
-#define kWrap_Off   (0)
-#define kWrap_On    (1)
-
-public:
-    int GetWrap() { return this->wrap; }
-    void SetWrap( int w ) { this->wrap = w; }
-    void ToggleWrap() { this->wrap = (this->wrap)?0:1; }
-    QString GetWrapString() { if( this->wrap ) return "On"; else return "Off"; }
-
 signals:
     void TextHasChanged();
 
@@ -133,4 +129,4 @@ public slots:
 
 };
 
-#endif // TEXTBUFFER_H
+#endif // TEXTPIPE_H

@@ -188,6 +188,16 @@ PalettedFrameBuffer::PalettedFrameBuffer( QObject *parent )
     , defaultBGColor( 0 )
     , defaultPromptColor( 2 )
     , promptType( kPrompt_Block )
+
+    , windowW( 0 ) /* usable window size */
+    , windowH( 0 )
+
+    /* border sizes */
+    , borderN( 0 )
+    , borderS( 0 )
+    , borderE( 0 )
+    , borderW( 0 )
+
     , hSpacing( 0 )
     , vSpacing( 1 )
     , doublevert( 1 )
@@ -195,6 +205,8 @@ PalettedFrameBuffer::PalettedFrameBuffer( QObject *parent )
     , scanlines( 0 )
 {
     this->Setup( this->width, this->height );
+    RecomputeRenderWindow();
+    this->DrawBorder();
 }
 
 PalettedFrameBuffer::~PalettedFrameBuffer()
@@ -240,10 +252,13 @@ void PalettedFrameBuffer::UpSet( void )
 }
 
 ////////////////////////////////////////////////////////////
-
+// Render Screen
+//  This takes the paletted buffer and shoves it out to the RGB buffer to be displayed
 void PalettedFrameBuffer::RenderScreen( void )
 {
     const PALENT * colors = pals[ this->palId ].colors;
+
+    this->RecomputeRenderWindow();
 
     if( !this->rgbBuffer ) return;
 
@@ -320,7 +335,7 @@ unsigned char PalettedFrameBuffer::Get( int x, int y )
 void PalettedFrameBuffer::Fill( unsigned char color )
 {
     memset( this->indexedBuffer, color, this->width * this->height );
-    this->RenderScreen();
+    // xthis->RenderScreen();
 }
 
 void PalettedFrameBuffer::FillWithPattern( int patno )
@@ -371,14 +386,131 @@ void PalettedFrameBuffer::FillWithPattern( int patno )
         this->Fill( 2 ); // Red
     }
 
-    this->RenderScreen();
+    // xthis->RenderScreen();
 }
 
+////////////////////////////////////////////////////////////
 
 #define QSET( X, Y, C ) \
     this->indexedBuffer[ ((Y) * this->width) + (X) ] = (C)
 
-int PalettedFrameBuffer::DrawText( int x, int y, const unsigned char * pens, const unsigned char * txt )
+////////////////////////////////////////////////////////////
+
+
+// need primitives:
+//  Hline ( memset )
+void PalettedFrameBuffer::DrawHLine( int sx, int sy, int w, int color )
+{
+    unsigned char * ptr = &this->indexedBuffer[ (sy * this->width) + sx ];
+    memset( ptr, color&0x0f, w );
+}
+
+void PalettedFrameBuffer::DrawVLine( int sx, int sy, int h, int color )
+{
+    unsigned char * ptr = &this->indexedBuffer[ (sy * this->width) + sx ];
+
+    while( h > 0 ) {
+        *ptr = color;
+        ptr += this->width;
+        h--;
+    }
+}
+
+void PalettedFrameBuffer::DrawFilledBox( int sx, int sy, int w, int h, int color )
+{
+    int r;
+    for( r=0 ; r<h ; r++ )
+    {
+        this->DrawHLine( sx, sy, w, color );
+        sy++;
+    }
+}
+
+
+void PalettedFrameBuffer::RecomputeRenderWindow( void )
+{
+    // render area
+    this->windowW = this->width - (this->borderE + this->borderW);
+    this->windowH = this->height - (this->borderN + this->borderS);
+}
+
+//  vline ( +width loop )
+//  box ( memsets in a loop )
+
+
+//////////////////////////////////////////////////////////////////////////////
+// Borders
+
+void PalettedFrameBuffer::DrawBorder()
+{
+    this->DrawBorder( 10, 0x34 );
+}
+
+
+void PalettedFrameBuffer::DrawBorder( int sz, int color )
+{
+    this->borderN = sz;
+    this->borderS = sz;
+    this->borderE = sz;
+    this->borderW = sz;
+
+    this->RecomputeRenderWindow();
+
+    if( sz <= 0 ) return;
+
+    // top
+    unsigned char * ptr = &this->indexedBuffer[0];
+    memset( ptr, color&0x0f, this->width * sz );
+
+    // bottom
+    ptr = &this->indexedBuffer[ this->width * (this->height - sz) ];
+    memset( ptr, color&0x0f, this->width * sz );
+
+    // left, right
+    this->DrawFilledBox(                           0, this->borderN,  sz, this->height - (sz*2), color );
+    this->DrawFilledBox( this->width - this->borderE, this->borderN,  sz, this->height - (sz*2), color );
+}
+
+void PalettedFrameBuffer::DrawAmiga1Border( void )
+{
+
+}
+
+void PalettedFrameBuffer::DrawAmiga2Border( void )
+{
+
+}
+
+////////////////////////////////////////////////////////////
+// Font stuff
+
+// these two will return the space in pixels per glyph needed to properly render
+// according to settings (width and height separate)
+int PalettedFrameBuffer::GetGlyphW( void )
+{
+    if( !fnt ) return 16;
+    int hSpacePerCharacter = fnt->w;
+
+    if( this->doublehoriz ) hSpacePerCharacter = fnt->w * 2;
+    hSpacePerCharacter += this->hSpacing;
+
+    return hSpacePerCharacter;
+}
+
+int PalettedFrameBuffer::GetGlyphH( void )
+{
+    if( !fnt ) return 16;
+
+    int vSpacePerCharacter = fnt->h;
+
+    if( this->doublevert ) vSpacePerCharacter = fnt->h * 2;
+    vSpacePerCharacter += this->vSpacing;
+
+    return vSpacePerCharacter;
+}
+
+
+void PalettedFrameBuffer::DrawCharacter( int x, int y, const unsigned char pen, const unsigned char ch )
 {
     int c = 0;
     int yp;
@@ -389,136 +521,84 @@ int PalettedFrameBuffer::DrawText( int x, int y, const unsigned char * pens, con
     if( this->doublevert ) vSpacePerCharacter = fnt->h * 2;
     vSpacePerCharacter += vSpacing;
 
-    if( !txt ) return vSpacePerCharacter;
+    /* if it's renderable */
+    if( ch >= fnt->startchar && ch <= fnt->maxchar ) {
 
-    /* for each character in the string */
-    while( *txt != '\0' ) {
+        /* for each scan line */
+        for( int fy=0 ; fy<fnt->h ; fy++ ) {
+            unsigned char pixels = fnt->data[ (ch * fnt->h) + fy ];
 
-        /* if it's renderable */
-        if( *txt >= fnt->startchar && *txt <= fnt->maxchar ) {
-            unsigned char ch = (*txt) - fnt->startchar;
-            unsigned char pen = *pens;
+            yp = y + fy;
+            if( this->doublevert ) yp += fy;
 
-            /* for each scan line */
-            for( int fy=0 ; fy<fnt->h ; fy++ ) {
-                unsigned char pixels = fnt->data[ (ch * fnt->h) + fy ];
-
-                yp = y + fy;
-                if( this->doublevert ) yp += fy;
-
-                /* for each column */
-                xp = x;
-                for( mask = 0x80 ; mask > 0 ; mask >>=1 )
-                {
-                    if( pixels & mask ) {
-                        c = pen & 0x0F;
-                    } else {
-                        c = (pen & 0xF0) >> 4;
-                    }
-
-                    if( c >= 0 ) {
-                        QSET( xp, yp, c );
-                        if( this->doublehoriz ) QSET( xp+1, yp, c );
-
-                        if( this->doublevert && !this->scanlines ) {
-                            QSET( xp, yp+1, c );
-                            if( this->doublehoriz ) QSET( xp+1, yp+1, c );
-                        }
-                    }
-                    xp++;
-                    if( this->doublehoriz ) xp++;
+            /* for each column */
+            xp = x;
+            for( mask = 0x80 ; mask > 0 ; mask >>=1 )
+            {
+                if( pixels & mask ) {
+                    c = pen & 0x0F;
+                } else {
+                    c = (pen & 0xF0) >> 4;
                 }
+
+                if( c >= 0 ) {
+                    QSET( xp, yp, c );
+                    if( this->doublehoriz ) QSET( xp+1, yp, c );
+
+                    if( this->doublevert && !this->scanlines ) {
+                        QSET( xp, yp+1, c );
+                        if( this->doublehoriz ) QSET( xp+1, yp+1, c );
+                    }
+                }
+                xp++;
+                if( this->doublehoriz ) xp++;
             }
         }
-        /* next character */
-        txt++;
-        pens++;
-
-        /* next position */
-        x = x + fnt->w + (fnt->w*this->doublehoriz ) + this->hSpacing;
-    }
-
-    return vSpacePerCharacter;
-}
-
-
-void PalettedFrameBuffer::RenderTextColorBuffer( const unsigned char * color,
-                                                 const unsigned char * text,
-                                                 int cursorX )
-{
-    if( !text || !color ) return;
-
-    int height = 480;
-    int hPad = 0;
-
-    int starty = height - this->VSpacePerCharacter();
-
-    /* clear the display */
-    this->Fill( 0 );
-
-    /* display the current text */
-    for( int j=0 ; starty > 0 ; j++ )
-    {
-        starty -= this->DrawText( hPad, starty, &color[ j * 256 ], &text[ j * 256 ] );
-    }
-
-    /* draw the cursor */
-    if( cursorX >= 0 && (this->promptType != kPrompt_None) )  {
-        /* block cursor:     color 0xFF, character '_'
-         * underline cursor: color 0x0F, character '_'
-         */
-        unsigned char cx = this->defaultPromptColor;
-
-        switch( this->promptType ) {
-        case( kPrompt_Underscore ):
-            cx = this->defaultPromptColor | ( this->defaultBGColor << 4 );
-            break;
-
-        case( kPrompt_Block ):
-            cx = this->defaultPromptColor | (this->defaultPromptColor << 4 );
-            break;
-        }
-
-
-
-        if( this->doublehoriz )
-            cursorX *= (16 + this->hSpacing);
-        else
-            cursorX *= (8 + this->hSpacing);
-
-        this->DrawText(  hPad + cursorX, height - this->VSpacePerCharacter(), &cx, "_" );
     }
 
     /* and flush it to the screen */
-    this->RenderScreen();
+    // xthis->RenderScreen();
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
+void PalettedFrameBuffer::BlitWindowUp( int npix )
+{
+    int a;
+
+    for( a = this->borderN ; a <= (this->windowH - this->borderS) ; a++ )
+    {
+        unsigned char * dst = indexedBuffer + (  a         * this->Width() );
+        unsigned char * src = indexedBuffer + ( (a + npix) * this->Width() );
+
+        memcpy( dst, src, this->windowW );
+    }
+}
+
 
 void PalettedFrameBuffer::SaveSettings()
 {
     SETUPSETTINGS();
-    s.setValue( kSettings_VisualPalId, this->palId );
-    s.setValue( kSettings_TermPrompt, this->promptType );
+    s.setValue( kSettings_PaletteId, this->palId );
+    s.setValue( kSettings_PromptStyle, this->promptType );
 
-    s.setValue( kSettings_VisualHSpacing, this->hSpacing );
-    s.setValue( kSettings_VisualVSpacing, this->vSpacing );
-    s.setValue( kSettings_VisualDoubleHoriz, this->doublehoriz );
-    s.setValue( kSettings_VisualDoubleVert, this->doublevert );
-    s.setValue( kSettings_VisualScanLines, this->scanlines );
+    s.setValue( kSettings_FontHSpacing, this->hSpacing );
+    s.setValue( kSettings_FontVSpacing, this->vSpacing );
+    s.setValue( kSettings_FontDoubleHoriz, this->doublehoriz );
+    s.setValue( kSettings_FontDoubleVert, this->doublevert );
+    s.setValue( kSettings_FontScanLines, this->scanlines );
 }
 
 void PalettedFrameBuffer::LoadSettings()
 {
     SETUPSETTINGS();
 
-    this->palId = s.value( kSettings_VisualPalId, "" ).toInt();
-    this->promptType = s.value( kSettings_TermPrompt, kPrompt_Block ).toInt();
+    this->palId = s.value( kSettings_PaletteId, "" ).toInt();
+    this->promptType = s.value( kSettings_PromptStyle, kPrompt_Block ).toInt();
 
-    this->hSpacing = s.value( kSettings_VisualHSpacing, 0 ).toInt();
-    this->vSpacing = s.value( kSettings_VisualVSpacing, 1 ).toInt();
-    this->doublehoriz = s.value( kSettings_VisualDoubleHoriz, 1 ).toInt();
-    this->doublevert = s.value( kSettings_VisualDoubleVert, 1 ).toInt();
-
-    this->scanlines = s.value( kSettings_VisualScanLines, 1 ).toInt();
+    this->hSpacing = s.value( kSettings_FontHSpacing, 0 ).toInt();
+    this->vSpacing = s.value( kSettings_FontVSpacing, 1 ).toInt();
+    this->doublehoriz = s.value( kSettings_FontDoubleHoriz, 1 ).toInt();
+    this->doublevert = s.value( kSettings_FontDoubleVert, 1 ).toInt();
+    this->scanlines = s.value( kSettings_FontScanLines, 1 ).toInt();
 }

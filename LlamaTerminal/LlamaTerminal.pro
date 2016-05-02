@@ -41,14 +41,16 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     palettedframebuffer.cpp \
     serialinterface.cpp \
-    textbuffer.cpp \
-    font.cpp
+    font.cpp \
+    theme.cpp \
+    textpipe.cpp
 
 HEADERS  += mainwindow.h \
     palettedframebuffer.h \
     serialinterface.h \
-    textbuffer.h \
     font.h \
-    globals.h
+    globals.h \
+    theme.h \
+    textpipe.h
 
 FORMS    += mainwindow.ui

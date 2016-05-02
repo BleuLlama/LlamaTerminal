@@ -39,8 +39,9 @@
 #include "globals.h"
 #include "palettedframebuffer.h"
 #include "serialinterface.h"
-#include "textbuffer.h"
+#include "textpipe.h"
 #include "font.h"
+#include "theme.h"
 
 namespace Ui {
 class MainWindow;
@@ -60,14 +61,32 @@ public:
     void mouseMoveEvent( QMouseEvent * e );
     void mousePressEvent( QMouseEvent * e );
     void mouseReleaseEvent( QMouseEvent * e );
+
+public:
+    void MenuModeKeyPress( QKeyEvent * e );
+    void MenuStart( QString title, bool special = false );
+    void MenuOption( char ch, QString text = "Exit menu." );
+    void MenuEnd( void );
     void DisplayMenu( void );
+
+private:
+    QString DecorationName( void );
+    void ToggleDecoration( void );
+    void ToggleDecorationColor( void );
+    QString DecorationColorAsString( void );
+    void ToggleDecorationSize( void );
+    QString DecorationSizeAsString( void );
 
 private:
     Ui::MainWindow *ui;
     PalettedFrameBuffer * pfb;
-    TextBuffer * tb;
+    TextPipe * tp;
     SerialInterface * si;
     Font * fnt;
+    Theme * theme;
+    int decorationStyle;
+    int decorationColor;
+    int decorationSize;
 
 private:
     void ShowReady( void );
@@ -76,6 +95,7 @@ private:
     void ShowDebug( int level = 0 );
 #define kDebugItem_Colors     ( 0x0001 )
 #define kDebugItem_EVERYTHING ( 0xFFFF )
+
 
 private:
 #define kRunMode_Serial (0)
@@ -102,6 +122,7 @@ public slots:
     void SerialDidReceiveData();
 
     void FontHasLoaded();
+    void ThemeHasLoaded();
 
     void SaveRequested(); /* a child has requested a save */
     void LoadRequested(); /* a child has requested a load */
@@ -110,6 +131,10 @@ private:
     QTimer timer;
     long timerTickCount;
     void StartTimer();
+
+private:
+    void addLipsum( void );
+
 };
 
 #endif // MAINWINDOW_H

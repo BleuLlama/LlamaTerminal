@@ -71,6 +71,7 @@ public:
     LFONT * GetLFont() { return &this->theFont; }
 
 private:
+    //bool FileExists(QString path);
     int GetNumFontsAvailable();
     QString PathForFontAt( int which );
     QString NameFromPath( QString pth );

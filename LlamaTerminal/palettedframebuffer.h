@@ -73,6 +73,9 @@ public:
     unsigned char * GetRGBBuffer() { return this->rgbBuffer; }
     QImage * getQImage() { return this->imageGfx; }
 
+    int Width() { return this->width; }
+    int Height() { return this->height; }
+
 public:
     void SetFont( LFONT * fnt ) { this->fnt = fnt; }
 
@@ -95,6 +98,7 @@ public:
         this->Fill( 0 );
     }
 
+
     void FillWithPattern( int patno );
 
 #define kDisplayPatternBlank     (0)
@@ -102,6 +106,7 @@ public:
 #define kDisplayPatternDiagonals (2)
 #define kDisplayPatternStripes   (3)
 #define kDisplayPatternRandom    (4)
+
 
 private:
     unsigned char defaultFGColor;
@@ -126,8 +131,42 @@ public:
     void TogglePromptType() { this->promptType++; if (this->promptType > 2) this->promptType = 1; }
     QString GetPromptString() { if( this->promptType == 1 ) return "Line"; return "Block"; }
 
-    /* FONT rendering stuff */
-private:
+    /* poly primitives */
+public:
+    void DrawHLine( int sx, int sy, int w, int color );
+    void DrawVLine( int sx, int sy, int h, int color );
+    void DrawFilledBox( int sx, int sy, int w, int h, int color );
+
+    void DrawLine( int sx, int sy, int dx, int dy, int color )
+    {
+        this->DrawFilledBox( std::min(sx,dx), std::min(sy,dy),
+                             std::max(sx,dx) - std::min(sx,dx),
+                             std::max(sy,dy) - std::min(sy,dy),
+                             color);
+    }
+
+
+public: /* decoration/border */
+    int windowW;
+    int windowH;
+
+public:
+    int borderN;
+    int borderS;
+    int borderE;
+    int borderW;
+
+public:
+    void DrawBorder();
+    void DrawBorder( int sz, int color );
+    void DrawNoBorder( void ) { this->DrawBorder( 0, 0 ); }
+    void DrawAmiga1Border( void );
+    void DrawAmiga2Border( void );
+
+    void RecomputeRenderWindow( void );
+
+
+private:  /* FONT rendering stuff */
     int hSpacing; /* space between characters */
     int vSpacing; /* space between rows */
     int doublevert;
@@ -156,19 +195,17 @@ public:
     bool GetScanLines(   void   ) { return (this->scanlines == 0) ? false : true; }
     bool ToggleScanLines( void ) { this->scanlines = this->scanlines ? 0:1; return this->GetScanLines(); }
 
-public:
-    int DrawText( int x, int y, const unsigned char * pens, const unsigned char * txt );
-    int DrawText( int x, int y, const unsigned char * pens, const char * txt ) {
-        return this->DrawText( x, y, pens, (const unsigned char *) txt );
-    }
+    // these two will return the space in pixels per glyph needed to properly render
+    // according to settings (width and height separate)
+    int GetGlyphW( void );
+    int GetGlyphH( void );
 
-    int VSpacePerCharacter( )
-    {
-        return( this->DrawText( 0, 0, NULL, (const unsigned char *)NULL ));
-    }
+    // and actually draw the character to the screen
+    void DrawCharacter( int x, int y, const unsigned char pen, const unsigned char ch );
 
-    void RenderTextColorBuffer( const unsigned char * color, const unsigned char * text, int cursorX = -1 );
-
+    // screen copy
+    void BlitWindowUp( int npix );
+    // and rendering options
 signals:
     void ScreenIsRendered();
 
