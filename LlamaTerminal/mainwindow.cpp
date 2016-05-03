@@ -747,9 +747,10 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
     }
 
     if( e->modifiers() & Qt::ShiftModifier){
-        if( this->runMode == kRunMode_Serial ) {
-            this->addLipsum();
-        }
+        //if( this->runMode == kRunMode_Serial ) {
+        //    this->addLipsum();
+        //}
+        this->pfb->SavePng();
     }
 
 

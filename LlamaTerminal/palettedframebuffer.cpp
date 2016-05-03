@@ -32,6 +32,7 @@
 */
 
 #include <Qdebug>
+#include <QFileInfo>
 #include "palettedframebuffer.h"
 #include "font.h"
 
@@ -274,6 +275,43 @@ void PalettedFrameBuffer::RenderScreen( void )
     emit this->ScreenIsRendered();
 }
 
+bool PalettedFrameBuffer::ImageExists( QString filepath )
+{
+    QFileInfo check_file( filepath );
+
+    // check if file exists
+    if (check_file.exists() ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void PalettedFrameBuffer::SavePng( QString filepath )
+{
+    char buf[128];
+    int idx = 0;
+
+    if( !filepath.compare( "" ) )
+    {
+        // filepath gets next item in list
+        snprintf( buf, 128, "/tmp/llt_%04d.png", idx );
+        filepath = buf;
+        while( this->ImageExists( buf ) && idx < 9999 ) {
+            idx++;
+            snprintf( buf, 128, "/tmp/llt_%04d.png", idx );
+            filepath = buf;
+        }
+    }
+
+    this->imageGfx->save( filepath );
+
+    QFileInfo qfi( filepath );
+
+    qDebug() << "Image saved to " << qfi.absoluteFilePath();
+}
+
+
 ////////////////////////////////////////////////////////////
 /*
  * typedef struct PALETTE {
@@ -415,6 +453,150 @@ void PalettedFrameBuffer::DrawVLine( int sx, int sy, int h, int color )
         h--;
     }
 }
+
+void PalettedFrameBuffer::DrawHDiagLine( int x1, int y1, int x2, int y2, int xDelta, int yDelta, int color )
+{
+    int avdy = std::abs( yDelta );
+    int d = (avdy<<1) - xDelta;
+    int dy_x_2 = avdy<<1;
+    int dy_m_dx_x_2= (avdy-xDelta)<<1;
+
+    if ( yDelta > 0) {  // this creates more code but is faster
+        while (x1 <= x2){
+            this->Set( x1, y1, color );
+            this->Set( x2, y2, color );
+            if (d < 0){
+                d += dy_x_2;
+            } else {
+                d += dy_m_dx_x_2;
+                y1++; y2--;
+            }
+            x1++; x2--;
+        }
+    } else {
+        while (x1 <= x2){
+            this->Set( x1, y1, color );
+            this->Set( x2, y2, color );
+            if (d < 0){
+                d += dy_x_2;
+            } else {
+                d += dy_m_dx_x_2;
+                y1--; y2++;
+            }
+            x1++; x2--;
+        }
+    }
+}
+
+void PalettedFrameBuffer::DrawVDiagLine( int x1, int y1, int x2, int y2, int xDelta, int yDelta, int color )
+{
+    int avdx = std::abs( xDelta );
+    int d = (avdx<<1) - yDelta;
+    int dx_x_2 = avdx<<1;
+    int dx_m_dy_x_2= (avdx-yDelta)<<1;
+
+    if ( xDelta > 0 )
+    {  // this creates more code but is faster
+        while (y1 <= y2){
+            this->Set( x1, y1, color );
+            this->Set( x2, y2, color );
+            if (d < 0){
+                d += dx_x_2;
+            } else {
+                d += dx_m_dy_x_2;
+                x1++; x2--;
+            }
+            y1++; y2--;
+        }
+    } else {
+        while (y1 <= y2){
+            this->Set( x1, y1, color );
+            this->Set( x2, y2, color );
+            if (d < 0){
+                d += dx_x_2;
+            } else {
+                d += dx_m_dy_x_2;
+                x1--; x2++;
+            }
+            y1++; y2--;
+        }
+    }
+}
+
+
+/* Note: this DrawLine() is a port from a paint program I worked on, UberPaint, (c)2000 */
+void PalettedFrameBuffer::DrawLine( int x1, int y1, int x2, int y2, int color )
+{
+    int xDelta = x2 - x1;
+    int yDelta = y2 - y1;
+
+    /* optimize for h and vlines */
+    if( xDelta == 0 ) {
+        this->DrawVLine( std::min( x1, x2 ), std::min( y1, y2 ),
+                         std::max( y1, y2 ) - std::min( y1, y2 ),
+                         color );
+        return;
+    }
+
+    if( yDelta == 0 ) {
+        this->DrawHLine( std::min( x1, x2 ), std::min( y1, y2 ),
+                         std::max( x1, x2 ) - std::min( x1, x2 ),
+                         color );
+        return;
+    }
+
+
+    /*
+    **  1) find out which sets of angles to use
+    **     (set 1 or set 2)
+    **     compare the absolute values of the slopes
+    **
+    **  2) figure out which quadrant it's in
+    **     (Quadrant A, B, C, or D)
+    **     compare dx and dy with 0 for this result
+    **
+    **    \        |        /
+    **      \  2B  |  2A  /
+    **        \    |    /                       set 1:  |dx| > |dy|
+    **          \  |  /   1A
+    **      1B    \|/               dy < 0      set 2:  |dx| < |dy|
+    **    ---------*---------       ------
+    **      1C    /|\     1D        dy > 0
+    **          /  |  \
+    **        /    |    \
+    **      /  2C  | 2D   \
+    **    /        |        \
+    **
+    **     dx < 0  |  dx > 0
+    */
+
+    if ( std::abs( xDelta ) > std::abs( yDelta ))
+    {
+        // it's an angle (315,45) or (135,225)   slow angle (Set 1)
+        if ( xDelta > 0 ){ // 1A or 1D
+            this->DrawHDiagLine( x1, y1, x2, y2,  xDelta, yDelta, color );
+            return;
+        } else { // 1B or 1C
+            //dx *= -1; dy *= -1;
+            this->DrawHDiagLine( x2, y2, x1, y1, -xDelta, -yDelta, color );
+            return;
+        }
+    }
+    else
+    {
+        // it's an angle (45,135) or (225,315)   steep angle (set 2)
+        if ( yDelta > 0 ){ // 2A or 2B (2B or not 2B)
+            this->DrawVDiagLine( x1, y1, x2, y2,  xDelta, yDelta, color );
+            return;
+        } else { // 2C or 2D
+            //dx *= -1; dy *= -1;
+            this->DrawVDiagLine( x2, y2, x1, y1, -xDelta, -yDelta, color );
+            return;
+        }
+    }
+
+}
+
 
 void PalettedFrameBuffer::DrawFilledBox( int sx, int sy, int w, int h, int color )
 {

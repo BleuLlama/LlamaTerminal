@@ -77,6 +77,10 @@ public:
     int Height() { return this->height; }
 
 public:
+    bool ImageExists( QString filepath );
+    void SavePng( QString filepath = "" );
+
+public:
     void SetFont( LFONT * fnt ) { this->fnt = fnt; }
 
     /* palette selection */
@@ -107,7 +111,10 @@ public:
 #define kDisplayPatternStripes   (3)
 #define kDisplayPatternRandom    (4)
 
-
+/* NOTE:
+ *  - do fg/bg color belong in here?
+ *  - prompt probably doesn't
+ */
 private:
     unsigned char defaultFGColor;
     unsigned char defaultBGColor;
@@ -135,15 +142,12 @@ public:
 public:
     void DrawHLine( int sx, int sy, int w, int color );
     void DrawVLine( int sx, int sy, int h, int color );
+    void DrawHDiagLine( int xMin, int yMin, int xMax, int yMax, int xDelta, int yDelta, int color );
+    void DrawVDiagLine( int xMin, int yMin, int xMax, int yMax, int xDelta, int yDelta, int color );
+
     void DrawFilledBox( int sx, int sy, int w, int h, int color );
 
-    void DrawLine( int sx, int sy, int dx, int dy, int color )
-    {
-        this->DrawFilledBox( std::min(sx,dx), std::min(sy,dy),
-                             std::max(sx,dx) - std::min(sx,dx),
-                             std::max(sy,dy) - std::min(sy,dy),
-                             color);
-    }
+    void DrawLine( int sx, int sy, int dx, int dy, int color );
 
 
 public: /* decoration/border */

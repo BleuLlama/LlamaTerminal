@@ -77,7 +77,7 @@ void TextPipe::setPfb( PalettedFrameBuffer * p )
 void TextPipe::TextClear()
 {
     if( this->pfb ) {
-        this->pfb->Fill( 0 );
+        this->pfb->Fill( this->pen >> 4 );
     }
     this->textCursorX = 0;
     this->textCursorY = 0;
@@ -101,7 +101,7 @@ void TextPipe::TextScroll()
         this->pfb->DrawFilledBox( screenX, screenY,
                                   this->pfb->windowW,
                                   this->pfb->windowH + this->pfb->borderS - screenY,
-                                  0x00 /* NOTE: SHould get it from the theme prefs */ );
+                                  this->pen >> 4 );
 
         this->pfb->DrawBorder();
     }
