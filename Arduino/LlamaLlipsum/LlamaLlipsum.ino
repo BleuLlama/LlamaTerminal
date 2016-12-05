@@ -7,10 +7,13 @@
  *  
  *  yorgle@gmail.com
  *  
+ *  v1.3 2016-12-04  ? prints help text now, return on empty lines
  *  v1.2 2016-03-08  AZ added to help decode word wrap ('a')
  *  v1.1 2016-02-29  Echo added
  *  v1.0 2016-02-24  Initial version
  */
+
+#define kLipsumVersion "v1.3"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Autobaud
@@ -158,7 +161,8 @@ void setup()
   autobaud_begin();
 
   Serial.println( "" );
-  Serial.println( "LlamaLlipsum" );
+  Serial.print( "LlamaLlipsum " );
+  Serial.println( kLipsumVersion );
   Serial.println( "yorgle@gmail.com" );
   Serial.println( "Ready." );
   Serial.println( "" );
@@ -369,7 +373,7 @@ void clearLine()
   line[0] = '\0';
 }
 
-void readLine()
+int readLine()
 {
   char ch = '\0';
   int lp = 0;
@@ -389,7 +393,9 @@ void readLine()
     Serial.print( "   << " );
     Serial.print( line );
     Serial.println( " >>" );
+    return 1;
   }
+  return 0;
 }
 
 
@@ -398,10 +404,12 @@ void readLine()
 
 void loop()
 {
-  readLine();
   bool err = false;
+  int gotLine = readLine();
 
-  if( !strcmp( line, "h" )) {
+  if( !gotLine ) return;
+
+  if( (!strcmp( line, "h" )) || (!strcmp( line, "?" )) ) {
     Serial.println( F("       t - text") );
     Serial.println( F("       a - a-z text") );
     Serial.println( F("       ? - settings") );
@@ -412,7 +420,7 @@ void loop()
     Serial.println( F("  e    - toggle echo") );
   }
 
-  else if( !strcmp( line, "?" )) {
+  if( !strcmp( line, "?" )) {
     echoSet( echo );
     newRows( rows );
     newBaud( baud );
