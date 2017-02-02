@@ -692,7 +692,7 @@ void Font::LoadCurrentSelection()
         this->theFont.startchar = internalFont.startchar;
         this->theFont.maxchar   = internalFont.maxchar;
 
-        std::memcpy( (void *) this->theFont.data,
+        memcpy( (void *) this->theFont.data,
                      (void *) internalFont.data,
                      (this->theFont.maxchar - this->theFont.startchar) * 8 );
         emit this->NewFontLoaded();

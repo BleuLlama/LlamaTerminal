@@ -1,0 +1,58 @@
+OK   1. QT Application
+OK   2. Display 640x480 image
+OK   3. Display animated image
+OK   4. Import internal font (8x8)
+OK   5. Determine default screen resolution (80x25)
+OK   6. Internal text buffer, with byte-in
+OK   7. Apply internal text chunk to text buffer (lipsum)
+OK   8. Apply internal text buffer to screen
+OK   9. Overlay layer for menus
+OK  10. Menu settings system
+OK  11. Save and load settings
+OK  12. Add serial interface
+OK  13. Use QT for serial communications - default to hardcoded, 9600 8-N-1
+OK  14. Word Wrap in serial handler (
+    15. Resize and maintain pitch/linearity 
+    16. Text render observes FG/BG  (mapping fg/bg to palette?, standardize palette?)
+        ** Standardize palettes to ANSI layout **
+OK  17. Instead of re-rendering all the text all the time, only render the differences.
+OK  18. Switch over to immediate-render of text to the frame buffer
+    19. Constrain font/text rendering and scrolling to the view area
+    20. Border mechanism
+    21. Palettes as PNG images
+    22. ANSI color code support
+    23. ASNI positional support
+    24. better menu interface
+
+--------------------------------------------------------------------------------
+
+ref: http://ascii-table.com/ansi-escape-sequences.php
+
+--------------------------------------------------------------------------------
+	Theme (group settings)	group.name.key
+
+
+Ongoing. Fonts
+
+Fonts:
+
+
+--------------------------------------------------------------------------------
+
+@files = ( 
+    "blocksansf.8.png",
+    "flat.8.png",
+    "grid_tile.png"
+);
+
+
+`mkdir out`;
+foreach $sfn ( @files ) {
+    $b = "out/" . $sfn;
+
+    $cmd = sprintf( " convert %s -background Red -crop 8x0 +repage -splice 1x0 +append -crop 0x8 +repage -splice 0x1 -append -gravity south -splice 0x1 -gravity east -splice 1x0 %s", $sfn, $b );
+
+    printf( "%s\n", $cmd );
+	`$cmd`;
+}
+

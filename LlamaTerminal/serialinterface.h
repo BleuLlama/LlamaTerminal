@@ -33,7 +33,7 @@
 
 #include <QObject>
 #include <QtSerialPort/QSerialPortInfo>
-#include <QSerialPort.h>
+#include <QSerialPort>
 #include "globals.h"
 
 class SerialInterface : public QObject

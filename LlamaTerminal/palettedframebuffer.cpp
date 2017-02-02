@@ -31,7 +31,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <Qdebug>
+#include <QDebug>
 #include <QFileInfo>
 #include "palettedframebuffer.h"
 #include "font.h"
@@ -43,48 +43,49 @@
 
 const PALENT colorPalette [] =
 {
-    // C=64 Palette
+    // C=64 Palette (ANSI-ish layout)
     {   0,   0,   0 },  // 0x00: black
-    { 255, 255, 255 },  // 0x01: white
-    { 136,   0,   0 },  // 0x02: red
-    { 170, 255, 238 },  // 0x03: cyan
-    { 204,  68, 204 },  // 0x04: violet
-    {   0, 204,  85 },  // 0x05: green
-    {   0,   0, 170 },  // 0x06: blue
-    { 238, 238, 119 },  // 0x07: yellow
-    { 221, 136,  85 },  // 0x08: orange
-    { 102,  68,   0 },  // 0x09: brown
-    { 225, 119, 119 },  // 0x0A: lt red
-    {  51,  51,  51 },  // 0x0B: dk gray
-    { 119, 119, 119 },  // 0x0C: gray
-    { 170, 255, 102 },  // 0x0D: green
-    {   0, 136, 255 },  // 0x0E: blue
-    { 187, 187, 187 },  // 0x0F: gray
+    { 136,   0,   0 },  // 0x01: red
+    {   0, 204,  85 },  // 0x02: green
+    { 102,  68,   0 },  // 0x03: brown
+    {   0,   0, 170 },  // 0x04: blue
+    { 204,  68, 204 },  // 0x05: violet
+    { 170, 255, 238 },  // 0x06: cyan
+    { 119, 119, 119 },  // 0x07: gray
+    {  51,  51,  51 },  // 0x08: dk gray
+    { 225, 119, 119 },  // 0x09: lt red
+    { 170, 255, 102 },  // 0x0a: green
+    { 238, 238, 119 },  // 0x0b: yellow
+    {   0, 136, 255 },  // 0x0c: lt blue
+    { 221, 136,  85 },  // 0x0d: orange
+    { 187, 187, 187 },  // 0x0e: lt gray
+    { 255, 255, 255 },  // 0x0f: white
 
-    // DeluxePaint Palette
+
+    // DeluxePaint Palette (ANSI-ISH layout)
     // My 16 color version of the Deluxe Paint palette - NTSC safe ;)
     {   0,   0,   0 },  // 0x10: black
-    {  80,  80,  80 },  // 0x11: dk gray
-    { 176, 176, 176 },  // 0x12: lt gray
-    { 240, 240, 240 },  // 0x13: white
+    { 149,  40,  26 },  // 0x11: dk red
+    {  56, 120,   5 },  // 0x12: dk green
+    { 152,  86,  43 },  // 0x13: brown
+    {   0,  67, 236 },  // 0x14: blue
+    { 183,  62, 130 },  // 0x15: red violet
+    {  87, 186,  96 },  // 0x16: blue green
+    { 176, 176, 176 },  // 0x17: lt gray
+    {  80,  80,  80 },  // 0x18: dk gray
     { 208,  60,  40 },  // 0x14: red
-    { 149,  40,  26 },  // 0x15: dk red
-    { 152,  86,  43 },  // 0x16: brown
-    { 200, 131,  38 },  // 0x17: orange
-    { 240, 219,  48 },  // 0x18: yellow
     { 158, 228,  28 },  // 0x19: green
-    {  56, 120,   5 },  // 0x1A: dk green
-    {  87, 186,  96 },  // 0x1B: blue green
-    {  87, 202, 205 },  // 0x1C: cyan
-    {   0,  67, 236 },  // 0x1D: blue
+    { 240, 219,  48 },  // 0x18: yellow
+    { 200, 131,  38 },  // 0x17: orange
     { 174,  80, 222 },  // 0x1E: violet
-    { 183,  62, 130 },   // 0x1F: red violet
+    {  87, 202, 205 },  // 0x1C: cyan
+    { 240, 240, 240 },  // 0x13: white
 
     // VGA (ANSI layout)
     {   0,   0,   0 }, // 0: black
     { 170,   0,   0 }, // 1: red
     {   0, 170,   0 }, // 2: green
-    { 170,  85,   0 }, // 3: brown
+    { 170,  85,   0 }, // 3: brown / orange / yellow
     {   0,   0, 170 }, // 4: blue
     { 170,   0, 170 }, // 5: magenta
     {   0, 170, 170 }, // 6: cyan
@@ -102,12 +103,12 @@ const PALENT colorPalette [] =
     {   0,   0,   0 }, // 0: black
     { 205,   0,   0 }, // 1: red
     {   0, 205,   0 }, // 2: green
-    { 205, 205,   0 }, // 3: brown
+    { 205, 205,   0 }, // 3: brown / orange / yellow
     {   0,   0, 238 }, // 4: blue
     { 205,   0, 205 }, // 5: magenta
     {   0, 205, 205 }, // 6: cyan
-    { 229, 229, 229 }, // 7: gray
-    { 127, 127, 127 }, // 8: light black
+    { 229, 229, 229 }, // 7: gray (lt gray)
+    { 127, 127, 127 }, // 8: light black (dk gray)
     { 255,   0,   0 }, // 9: light red
     {   0, 255,   0 }, // a: light green
     { 255, 255,   0 }, // b: light yellow
@@ -134,6 +135,23 @@ const PALENT colorPalette [] =
     {  24,  45, 125 }, // e: blue (**)
     {  76, 117, 215 }, // f: light blue
 
+    // Amiga 1.x (ANSI Layout)
+    {  14,  65, 140 }, // 0: blue
+    { 236, 236, 236 }, // 1: white
+    {   0,   0,   0 }, // 2: black
+    { 220, 115,  35 }, // 3: orange
+    {  80,  80,  80 }, // 4: gray 80  // from here down are ideas
+    { 197, 197, 197 }, // 5: gray 197
+    {  10,  20,  55 }, // 6: dk blue
+    { 150, 150, 150 }, // 7: gray 150
+    { 161,  44,  28 }, // 8: tomato red
+    { 255, 255, 255 }, // 9: pure white
+    {  71,  16,  38 }, // a: deep burgundy
+    { 235, 161,  78 }, // b: light orange/creamsicle
+    {  50,  95,  36 }, // c: green
+    { 103, 164,  50 }, // d: light green
+    {  24,  45, 125 }, // e: blue (**)
+    {  76, 117, 215 }, // f: light blue
     // Amiga 2.x
     { 154, 154, 154 }, // 0: gray
     {   0,   0,   0 }, // 1: black
@@ -608,7 +626,20 @@ void PalettedFrameBuffer::DrawFilledBox( int sx, int sy, int w, int h, int color
     }
 }
 
-
+/* == New method ==
+ * Three regions:
+ * 1. Color Border
+ * 2. Decoration Border
+ * 3. font-multiple sized text area
+ */
+/* we know: Screen width, height, font character width, height
+ *          requested border width, height, Decoration border width, height
+ *
+ * Decoration border size is fixed per theme
+ * Text area is the maximum integer size of pixels for the area of the screen minus detail border requirements
+ * Color Border is whatever's leftover outside of the detail border
+ *
+ */
 void PalettedFrameBuffer::RecomputeRenderWindow( void )
 {
     // render area
