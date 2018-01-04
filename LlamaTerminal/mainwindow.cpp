@@ -31,6 +31,7 @@
 #include <QDebug>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "framedsprite.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -50,6 +51,14 @@ MainWindow::MainWindow(QWidget *parent)
     , timerTickCount( 0 )
 
 {
+
+    FramedSprite *f = new FramedSprite(
+                    this,
+                    QString::fromUtf8("/Users/sdl/proj/LlamaTerminal/Themes/Decorations/AmigaDOS_2.04.png") );
+    f->Dump();
+
+    exit( EXIT_FAILURE );
+
     ui->setupUi(this);
 
     this->pfb = new PalettedFrameBuffer( this );
@@ -167,6 +176,7 @@ void MainWindow::TextBufferHasChanged( )
 
     if( this->delayRender ) return;
 
+        /// ALL OF THIS SHOULD BE MOVED INTO PFB
     switch( this->decorationStyle ) {
     case( kDecoration_C64 ):
         this->pfb->DrawBorder( this->decorationSize, this->decorationColor );

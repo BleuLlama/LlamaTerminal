@@ -43,7 +43,8 @@ SOURCES += main.cpp\
     serialinterface.cpp \
     font.cpp \
     theme.cpp \
-    textpipe.cpp
+    textpipe.cpp \
+    framedsprite.cpp
 
 HEADERS  += mainwindow.h \
     palettedframebuffer.h \
@@ -51,6 +52,7 @@ HEADERS  += mainwindow.h \
     font.h \
     globals.h \
     theme.h \
-    textpipe.h
+    textpipe.h \
+    framedsprite.h
 
 FORMS    += mainwindow.ui

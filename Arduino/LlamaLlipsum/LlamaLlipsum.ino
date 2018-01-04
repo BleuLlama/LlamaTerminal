@@ -28,26 +28,26 @@ int echo = 0;
 
 void serial_connected( void )
 {
-  Serial.flush();
-  Serial.print( "CONNECT " );
-  Serial.println( baud, DEC );
+  Serial1.flush();
+  Serial1.print( "CONNECT " );
+  Serial1.println( baud, DEC );
 }
 
 void autobaud_begin( void )
 {
   baud = 0;
   do {
-    Serial.begin( bauds[baud] );
+    Serial1.begin( bauds[baud] );
     while( !Serial ); // leonardo fix
     
     // wait for a character
-    while( !Serial.available() ) { 
+    while( !Serial1.available() ) { 
       #ifdef NEVER
       // check for break-out
       if( digitalRead( kButton ) == LOW ) {
         baud = kDefaultBaud;
-        Serial.end();
-        Serial.begin( baud );
+        Serial1.end();
+        Serial1.begin( baud );
         while( !Serial ); // leonardo!
         serial_connected();
         return;
@@ -55,14 +55,14 @@ void autobaud_begin( void )
       #endif
     }
     
-    int ch = Serial.read();
-    if( echo ) Serial.write( ch );
+    int ch = Serial1.read();
+    if( echo ) Serial1.write( ch );
     if( ch == 0x0d || ch == 0x0a) {
       baud = bauds[baud];
       serial_connected( );
       return;
     }
-    Serial.end();
+    Serial1.end();
     
     baud++;
   } while( bauds[baud] != 0 );
@@ -83,72 +83,72 @@ long wait = 0;
 void echoSet( int e )
 {
   echo = e;
-  if( echo == 0 ) Serial.println( F( "Echo off." ));
-  if( echo == 1 ) Serial.println( F( "Echo on." ));
+  if( echo == 0 ) Serial1.println( F( "Echo off." ));
+  if( echo == 1 ) Serial1.println( F( "Echo on." ));
 }
 
 void newCols( int w )
 {
   if( w <= 0 ) {
-    Serial.println( F( "Bad number." ));
+    Serial1.println( F( "Bad number." ));
     return;
   }
   
   cols = w;
-  Serial.print( w, DEC );
-  Serial.println( " cols." );
+  Serial1.print( w, DEC );
+  Serial1.println( " cols." );
   
   for( int w=0 ; w<cols ; w++ ) {
-    Serial.print( "-" );
+    Serial1.print( "-" );
   }
-  Serial.println( "" );
+  Serial1.println( "" );
 }
 
 void newRows( int h )
 {
   if( h <= 0 ) {
-    Serial.println( F( "Bad number." ));
+    Serial1.println( F( "Bad number." ));
     return;
   }
 
   rows = h;
-  Serial.print( h, DEC );
-  Serial.println( " rows." );
+  Serial1.print( h, DEC );
+  Serial1.println( " rows." );
 }
 
 void newBaud( long b )
 {
   if( b < 0 ) {
-    Serial.println( F( "Bad number." ));
+    Serial1.println( F( "Bad number." ));
     return;
   }
 
 
   baud = b;
   if( b <= 10 ) {
-    Serial.print( bauds[baud] );
+    Serial1.print( bauds[baud] );
   } else {
-    Serial.print( b, DEC );
+    Serial1.print( b, DEC );
   }
-  Serial.println( " baud." );
+  Serial1.println( " baud." );
 
-  Serial.end();
+  Serial1.end();
   delay( 10 );
-  Serial.begin( baud );
+  Serial1.begin( baud );
   while( !Serial );   // leonardo fix
 }
 
 void newWait( long w )
 {
   if( w < 0 ) {
-    Serial.println( F( "Bad number." ));
+    Serial1.println( F( "Bad number." ));
     return;
   }
 
   wait = w;
   
-  Serial.print( w, DEC );
-  Serial.println( " ms wait." );
+  Serial1.print( w, DEC );
+  Serial1.println( " ms wait." );
 }
 
 
@@ -157,15 +157,15 @@ void newWait( long w )
 void setup()
 {
   // set up the serial
-  //Serial.begin( 9600 );
+  //Serial1.begin( 9600 );
   autobaud_begin();
 
-  Serial.println( "" );
-  Serial.print( "LlamaLlipsum " );
-  Serial.println( kLipsumVersion );
-  Serial.println( "yorgle@gmail.com" );
-  Serial.println( "Ready." );
-  Serial.println( "" );
+  Serial1.println( "" );
+  Serial1.print( "LlamaLlipsum " );
+  Serial1.println( kLipsumVersion );
+  Serial1.println( "yorgle@gmail.com" );
+  Serial1.println( "Ready." );
+  Serial1.println( "" );
 
   clearLine();
 
@@ -250,7 +250,7 @@ void printText( )
     // see if it will fit on the line
     w = strlen( lipsum[idx] );
     if( ((ncols + w ) >= cols) || (w==0) ) {
-      Serial.println( "" );
+      Serial1.println( "" );
       ncols = 0;
       nrows++;
     }
@@ -259,19 +259,19 @@ void printText( )
     if( nrows < rows ) {
       // put it on this row
       if( ncols != 0 ) {
-        Serial.print( " " );
+        Serial1.print( " " );
         ncols++;
       }
 
       if( wait > 0 ) {
         cp = lipsum[idx];
         while( *cp != '\0' ) {
-          Serial.write( *cp );
+          Serial1.write( *cp );
           cp++;
           delay( wait );
         }
       } else {
-        Serial.print( lipsum[idx] );
+        Serial1.print( lipsum[idx] );
       }
       ncols += w;
     }
@@ -289,15 +289,15 @@ int incrementingCH = 'a';
 void AZWrite( const char cp )
 {
   if( cp >= 'a' && cp <= 'z' ) {
-    Serial.write( incrementingCH );
+    Serial1.write( incrementingCH );
     incrementingCH++;
     
   } else if( cp >= 'A' && cp <= 'Z' ) {
-    Serial.write( incrementingCH - 0x20 );
+    Serial1.write( incrementingCH - 0x20 );
     incrementingCH++;
     
   } else {
-    Serial.write( cp );
+    Serial1.write( cp );
   }
 
   
@@ -328,7 +328,7 @@ void printAZText( )
     // see if it will fit on the line
     w = strlen( lipsum[idx] );
     if( ((ncols + w ) >= cols) || (w==0) ) {
-      Serial.println( "" );
+      Serial1.println( "" );
       ncols = 0;
       nrows++;
     }
@@ -337,7 +337,7 @@ void printAZText( )
     if( nrows < rows ) {
       // put it on this row
       if( ncols != 0 ) {
-        Serial.print( " " );
+        Serial1.print( " " );
         ncols++;
       }
 
@@ -380,9 +380,9 @@ int readLine()
 
   /* read until newline or filled string */
   while( (ch != 10 ) && (ch != 13) && (lp < (80-1)) ) {
-    while( !Serial.available() ) delay( 5 );
-    ch = Serial.read();
-    if( echo ) Serial.write( ch );
+    while( !Serial1.available() ) delay( 5 );
+    ch = Serial1.read();
+    if( echo ) Serial1.write( ch );
     line[lp] = ch;
     lp++;
   }
@@ -390,9 +390,9 @@ int readLine()
 
   // echo if we got something
   if( line[0] != '\0' ) {
-    Serial.print( "   << " );
-    Serial.print( line );
-    Serial.println( " >>" );
+    Serial1.print( "   << " );
+    Serial1.print( line );
+    Serial1.println( " >>" );
     return 1;
   }
   return 0;
@@ -410,14 +410,14 @@ void loop()
   if( !gotLine ) return;
 
   if( (!strcmp( line, "h" )) || (!strcmp( line, "?" )) ) {
-    Serial.println( F("       t - text") );
-    Serial.println( F("       a - a-z text") );
-    Serial.println( F("       ? - settings") );
-    Serial.println( F("  c<n> - cols") );
-    Serial.println( F("  r<n> - rows") );
-    Serial.println( F("  b<n> - baud") );
-    Serial.println( F("  w<n> - wait in ms") );
-    Serial.println( F("  e    - toggle echo") );
+    Serial1.println( F("       t - text") );
+    Serial1.println( F("       a - a-z text") );
+    Serial1.println( F("       ? - settings") );
+    Serial1.println( F("  c<n> - cols") );
+    Serial1.println( F("  r<n> - rows") );
+    Serial1.println( F("  b<n> - baud") );
+    Serial1.println( F("  w<n> - wait in ms") );
+    Serial1.println( F("  e    - toggle echo") );
   }
 
   if( !strcmp( line, "?" )) {
@@ -446,6 +446,6 @@ void loop()
   else err = true;
 
   if( err == true ) {
-    Serial.println( F( "What?" ));
+    Serial1.println( F( "What?" ));
   }
 }

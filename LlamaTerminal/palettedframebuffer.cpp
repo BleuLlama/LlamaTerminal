@@ -152,6 +152,7 @@ const PALENT colorPalette [] =
     { 103, 164,  50 }, // d: light green
     {  24,  45, 125 }, // e: blue (**)
     {  76, 117, 215 }, // f: light blue
+
     // Amiga 2.x
     { 154, 154, 154 }, // 0: gray
     {   0,   0,   0 }, // 1: black
@@ -169,7 +170,6 @@ const PALENT colorPalette [] =
     {  93, 219,  69 }, // D: green
     {   2,  40, 212 }, // E: Blue
     { 231, 135,  37 }, // F: Orange
-
 };
 
 typedef struct PALETTE {
@@ -187,7 +187,8 @@ PALETTE pals[] = {
     { "VT220-G",      &colorPalette[16 * 3], 0x0a, 0x00, 0x02 },
     { "xterm",        &colorPalette[16 * 3], 0x07, 0x00, 0x02 },
     { "Amiga 1.x",    &colorPalette[16 * 4], 0x01, 0x00, 0x03 },
-    { "Amiga 2.x",    &colorPalette[16 * 5], 0x01, 0x00, 0x03 },
+    { "Amiga 1.x (ANSI)",    &colorPalette[16 * 5], 0x01, 0x00, 0x03 },
+    { "Amiga 2.x",    &colorPalette[16 * 6], 0x01, 0x00, 0x03 },
     { NULL, NULL, 0, 0, 0 }
 };
 
@@ -208,8 +209,15 @@ PalettedFrameBuffer::PalettedFrameBuffer( QObject *parent )
     , defaultPromptColor( 2 )
     , promptType( kPrompt_Block )
 
-    , windowW( 0 ) /* usable window size */
+    /* usable window size */
+    , windowW( 0 )
     , windowH( 0 )
+
+    /* decoration allocated sizes */
+    , decorationN( 0 )
+    , decorationS( 0 )
+    , decorationE( 0 )
+    , decorationW( 0 )
 
     /* border sizes */
     , borderN( 0 )
@@ -217,6 +225,7 @@ PalettedFrameBuffer::PalettedFrameBuffer( QObject *parent )
     , borderE( 0 )
     , borderW( 0 )
 
+    /* font sizing */
     , hSpacing( 0 )
     , vSpacing( 1 )
     , doublevert( 1 )
@@ -278,6 +287,7 @@ void PalettedFrameBuffer::RenderScreen( void )
     const PALENT * colors = pals[ this->palId ].colors;
 
     this->RecomputeRenderWindow();
+    // XX should draw Border, Decoration, then indexed buffer.
 
     if( !this->rgbBuffer ) return;
 
@@ -331,20 +341,6 @@ void PalettedFrameBuffer::SavePng( QString filepath )
 
 
 ////////////////////////////////////////////////////////////
-/*
- * typedef struct PALETTE {
-    const char * name;
-    const PALENT * colors;
-} PALETTE;
-
-PALETTE pals[] = {
-    { "Commodore 64", &colorPalette[0] },
-    { "Deluxe Paint", &colorPalette[16] },
-    { "PC-DOS VGA",   &colorPalette[32] },
-    { "xterm",        &colorPalette[48] },
-    { NULL, NULL }
-};
-*/
 
 void PalettedFrameBuffer::TogglePalette( void )
 {
@@ -626,10 +622,14 @@ void PalettedFrameBuffer::DrawFilledBox( int sx, int sy, int w, int h, int color
     }
 }
 
+
+//////////////////////////////////////////////////////////////////////////////
+// Borders
+
 /* == New method ==
  * Three regions:
- * 1. Color Border
- * 2. Decoration Border
+ * 1. Color Border (border)
+ * 2. Decoration Border (decoration
  * 3. font-multiple sized text area
  */
 /* we know: Screen width, height, font character width, height
@@ -647,12 +647,6 @@ void PalettedFrameBuffer::RecomputeRenderWindow( void )
     this->windowH = this->height - (this->borderN + this->borderS);
 }
 
-//  vline ( +width loop )
-//  box ( memsets in a loop )
-
-
-//////////////////////////////////////////////////////////////////////////////
-// Borders
 
 void PalettedFrameBuffer::DrawBorder()
 {

@@ -103,7 +103,7 @@ void TextPipe::TextScroll()
                                   this->pfb->windowH + this->pfb->borderS - screenY,
                                   this->pen >> 4 );
 
-        this->pfb->DrawBorder();
+        this->pfb->DrawBorder(); // NO. SHOULD BE HANDLED BY PFB
     }
 }
 

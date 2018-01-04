@@ -535,7 +535,7 @@ unsigned char __font_data[224][8] =
     { 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
 
-LFONT xinternalFont = {
+LFONT xinternalNameFromPath{
     ' ', ' '+224,
     8, 8,
     (unsigned char *)__font_data

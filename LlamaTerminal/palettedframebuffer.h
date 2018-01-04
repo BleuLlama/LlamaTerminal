@@ -155,6 +155,12 @@ public: /* decoration/border */
     int windowH;
 
 public:
+    int decorationN;
+    int decorationS;
+    int decorationE;
+    int decorationW;
+
+public:
     int borderN;
     int borderS;
     int borderE;
